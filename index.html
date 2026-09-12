@@ -249,6 +249,32 @@ button{font-family:inherit;}
 .pan.tip-heavy{border-color:var(--accent-dark); background:rgba(255,177,0,.08);}
 .tilt-hint{text-align:center;font-size:.72rem;color:var(--ink-soft);margin-top:8px;font-style:italic;}
 
+/* Animasi "hilangkan pasangan nol" — ubin membesar sekilas lalu menyusut & memudar */
+@keyframes zeroVanish{
+  0%{ transform:scale(1); opacity:1; }
+  40%{ transform:scale(1.28); opacity:.9; filter:brightness(1.5); }
+  100%{ transform:scale(0); opacity:0; }
+}
+.zero-pair-anim{ animation:zeroVanish .6s ease forwards; pointer-events:none; }
+
+/* ===== BAGI RATA (drag & drop) ===== */
+.divide-board{display:flex; flex-direction:column; align-items:center; gap:18px; width:100%; max-width:680px;}
+.divide-groups-row{display:flex; gap:18px; flex-wrap:wrap; justify-content:center; width:100%;}
+.divide-group-col{display:flex; flex-direction:column; align-items:center; gap:8px; background:#fff; border:2px solid var(--line); border-radius:16px; padding:12px 10px; box-shadow:var(--shadow); min-width:96px;}
+.divide-group-caption{font-size:.72rem;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px;}
+.divide-group-zone{min-height:110px; width:100%; background:var(--bg); border:2px dashed #C9C4B2; border-radius:12px; padding:8px; display:flex; flex-wrap:wrap; align-content:flex-start; justify-content:center; gap:5px; cursor:pointer;}
+.divide-group-zone.divide-balanced{border-color:var(--pos); background:rgba(47,158,104,.08);}
+.divide-pool{width:100%; background:#fff; border:2px dashed var(--primary); border-radius:16px; padding:12px; box-shadow:var(--shadow);}
+.divide-pool.divide-empty{border-color:var(--pos); background:rgba(47,158,104,.06);}
+.divide-pool-label{font-size:.78rem;font-weight:800;color:var(--primary-dark);margin-bottom:8px;text-align:center;}
+.divide-pool.divide-empty .divide-pool-label{color:var(--pos-dark);}
+.divide-pool-tiles{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; min-height:40px;}
+.divide-hint-text{text-align:center;font-size:.78rem;color:var(--ink-soft);max-width:520px;line-height:1.5;}
+.divide-input-row{display:flex;align-items:center;gap:8px;margin-top:6px;}
+.divide-input-row .xlbl{font-weight:800;font-family:'Courier New',monospace;font-size:1.05rem;color:var(--primary-dark);}
+.divide-input{width:90px;padding:8px 10px;border:2px solid var(--line);border-radius:10px;font-size:1rem;font-weight:700;font-family:'Courier New',monospace;color:var(--ink);text-align:center;}
+.divide-input:focus{outline:none;border-color:var(--primary);}
+
 /* ===== SQUARE (KUADRAT) ===== */
 .square-wrap{display:inline-grid; background:#fff; border-radius:18px; padding:16px; box-shadow:var(--shadow);}
 .quad-row{display:flex;}
@@ -499,6 +525,13 @@ let dragSourceEl = null;
 let dragHoverZone = null;
 
 function enableBankDrag(slotEl, type, sign){
+  // touch-action:none WAJIB di-set di sini (bukan hanya preventDefault saat
+  // pointerdown), karena browser layar sentuh menentukan apakah sentuhan ini
+  // akan di-scroll atau diserahkan ke JS BERDASARKAN CSS touch-action milik
+  // elemen tersebut, sebelum event pointerdown sempat kita cegah.
+  slotEl.style.touchAction = 'none';
+  slotEl.style.webkitUserSelect = 'none';
+  slotEl.style.userSelect = 'none';
   slotEl.addEventListener('pointerdown', (e)=>{
     if(e.pointerType==='mouse' && e.button !== 0) return;
     e.preventDefault();
@@ -506,8 +539,27 @@ function enableBankDrag(slotEl, type, sign){
   });
 }
 
-function beginDrag(e, type, sign, sourceEl){
-  dragInfo = {type, sign};
+// Mengaktifkan drag untuk ubin yang SUDAH ADA di papan kerja (bukan menduplikasi dari bank),
+// dipakai misalnya pada langkah "Bagi Rata" agar ubin bisa dipindah antar kelompok/kumpulan.
+function enableInstanceDrag(tileEl, tileObj, sourceArr){
+  tileEl.style.cursor = 'grab';
+  // PERBAIKAN LAYAR SENTUH: tanpa touch-action:none, jari yang menyentuh ubin
+  // ini akan ditangkap browser sebagai gestur scroll/zoom bawaan (warisan dari
+  // aturan global `*{touch-action:manipulation}`), sehingga drag kustom di
+  // bawah ini tidak pernah sempat berjalan di HP/tablet. Menonaktifkannya di
+  // level elemen membuat drag ubin bekerja mulus di mouse MAUPUN sentuhan jari.
+  tileEl.style.touchAction = 'none';
+  tileEl.style.webkitUserSelect = 'none';
+  tileEl.style.userSelect = 'none';
+  tileEl.addEventListener('pointerdown', (e)=>{
+    if(e.pointerType==='mouse' && e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();
+    beginDrag(e, tileObj.type, tileObj.sign, tileEl, {arr:sourceArr, id:tileObj.id});
+  });
+}
+
+function beginDrag(e, type, sign, sourceEl, moveFrom=null){
+  dragInfo = {type, sign, moveFrom};
   dragSourceEl = sourceEl;
   sourceEl.classList.add('selected');
 
@@ -564,10 +616,11 @@ function dropAt(x, y){
   endDragVisuals();
   dragInfo = null;
   if(zone && zone._onDrop && info){
-    zone._onDrop(info.type, info.sign);
-  } else if(info){
+    zone._onDrop(info.type, info.sign, info.moveFrom);
+  } else if(info && !info.moveFrom){
     toast('Seret ubin ke area kerja untuk menaruhnya 👆');
   }
+  // Jika info.moveFrom ada tapi tidak dilepas di dropzone manapun, ubin tetap di tempat asalnya (tidak hilang).
 }
 
 function cancelDrag(){
@@ -722,7 +775,7 @@ const MODULES = [
     levels:[
       { badge:'Tutorial', title:'2x + 3 = 7', eq:'2x + 3 = 7', answer:2,
         desc:`Bayangkan persamaan sebagai <b>timbangan</b> yang harus selalu seimbang. Apapun yang kamu lakukan di satu sisi, harus dilakukan juga di sisi lain.`,
-        hint:'Tambahkan 3 ubin -1 ke kiri dan ke kanan, hilangkan pasangan nol di kiri, lalu tekan "Bagi Rata".',
+        hint:'Tambahkan 3 ubin -1 ke kiri dan ke kanan, hilangkan pasangan nol di kiri, lalu bagi rata ubin dengan drag & drop.',
         initial:{ left:[{type:'x',sign:1},{type:'x',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1}],
                   right:[{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1}] },
         steps:[
@@ -734,7 +787,7 @@ const MODULES = [
             desc:`<b>Langkah 2 — Buang Pasangan Nol:</b><br>Di sisi kiri sekarang ada ubin <b>+1</b> dan <b>-1</b> yang berdampingan. Jika digabung, keduanya menjadi <b>nol</b>.<br><br>Tekan tombol "Hilangkan Pasangan Nol" untuk membersihkannya secara otomatis.`,
             hint:'Pasangan +1 dan -1 saling meniadakan.' },
           { action:'divide',
-            desc:`<b>Langkah 3 — Bagi Rata:</b><br>Sisi kiri kini tersisa ubin <b>x</b> saja, sisi kanan tersisa ubin satuan. Bagikan jumlah ubin di kanan secara adil ke setiap ubin x untuk menemukan nilai <b>x</b>.<br><br>Tekan tombol "Bagi Rata".`,
+            desc:`<b>Langkah 3 — Bagi Rata:</b><br>Sisi kiri kini tersisa ubin <b>x</b> saja, sisi kanan tersisa ubin satuan. Seret ubin satuan dari <b>kumpulan</b> ke bawah tiap ubin x sampai terbagi rata, lalu tuliskan nilai <b>x</b> yang kamu temukan dan tekan "Cek Jawaban".`,
             hint:'Berapa ubin x di kiri? Bagi jumlah unit di kanan dengan angka itu.' },
         ] },
       { badge:'Latihan', title:'3x - 2 = 7', eq:'3x - 2 = 7', answer:3,
@@ -751,7 +804,7 @@ const MODULES = [
             desc:`<b>Langkah 2 — Buang Pasangan Nol:</b><br>Bersihkan pasangan <b>+1</b> dan <b>-1</b> yang berdampingan di sisi kiri.<br><br>Tekan tombol "Hilangkan Pasangan Nol".`,
             hint:'Pasangan +1 dan -1 saling meniadakan.' },
           { action:'divide',
-            desc:`<b>Langkah 3 — Bagi Rata:</b><br>Bagikan unit di kanan secara adil ke setiap ubin x di kiri untuk menemukan nilai <b>x</b>.<br><br>Tekan tombol "Bagi Rata".`,
+            desc:`<b>Langkah 3 — Bagi Rata:</b><br>Seret ubin satuan dari <b>kumpulan</b> ke bawah tiap ubin x di kiri sampai terbagi rata, lalu tuliskan nilai <b>x</b> yang kamu temukan dan tekan "Cek Jawaban".`,
             hint:'Berapa ubin x di kiri? Bagi jumlah unit di kanan dengan angka itu.' },
         ] },
       { badge:'Tantangan', title:'2x + 1 = -3', eq:'2x + 1 = -3', answer:-2,
@@ -768,7 +821,7 @@ const MODULES = [
             desc:`<b>Langkah 2 — Buang Pasangan Nol:</b><br>Bersihkan pasangan <b>+1</b> dan <b>-1</b> yang berdampingan di sisi kiri.<br><br>Tekan tombol "Hilangkan Pasangan Nol".`,
             hint:'Pasangan +1 dan -1 saling meniadakan.' },
           { action:'divide',
-            desc:`<b>Langkah 3 — Bagi Rata:</b><br>Bagikan ubin negatif di kanan secara adil ke setiap ubin x di kiri untuk menemukan nilai <b>x</b> (hasilnya negatif).<br><br>Tekan tombol "Bagi Rata".`,
+            desc:`<b>Langkah 3 — Bagi Rata:</b><br>Seret ubin negatif dari <b>kumpulan</b> ke bawah tiap ubin x di kiri sampai terbagi rata, lalu tuliskan nilai <b>x</b> (hasilnya negatif) dan tekan "Cek Jawaban".`,
             hint:'Berapa ubin x di kiri? Bagi jumlah unit di kanan (negatif) dengan angka itu.' },
         ] },
     ]
@@ -1232,17 +1285,22 @@ const FreeboardEngine = {
     });
     if(!removed){ toast('Tidak ada pasangan nol yang bisa dihilangkan.'); return; }
 
-    // Fade out the matching DOM tiles (rendered in the same order as this.tiles), then remove from state.
+    // Mainkan animasi "meledak/menghilang" (sama seperti di Timbangan) pada ubin
+    // yang akan dibuang, sebelum benar-benar dihapus dari state, supaya efeknya
+    // konsisten & selalu terlihat di setiap aktivitas yang punya tombol ini.
     const boardEl = document.querySelector('.freeboard-area');
     const domTiles = boardEl ? [...boardEl.children] : [];
     this.tiles.forEach((t, i)=>{
-      if(toRemove.has(t.id) && domTiles[i]) domTiles[i].classList.add('fade-out');
+      if(toRemove.has(t.id) && domTiles[i]) domTiles[i].classList.add('zero-pair-anim');
     });
+    // Nonaktifkan tombol sementara supaya animasi tidak terpotong oleh klik ganda.
+    const btn = document.getElementById('btnSimplify');
+    if(btn) btn.disabled = true;
+    toast('💥 Pasangan nol dihilangkan!');
     setTimeout(()=>{
       this.tiles = this.tiles.filter(t=> !toRemove.has(t.id));
       this.renderWork();
-      toast('💥 Pasangan nol berhasil dihilangkan!');
-    }, 650);
+    }, 620);
   },
   check(){
     const lvl = this.lvl;
@@ -1461,8 +1519,18 @@ const ScaleEngine = {
     this.m = m; this.lvl = lvl;
     this.left = lvl.initial.left.map(t=>({...t,id:uid()}));
     this.right = lvl.initial.right.map(t=>({...t,id:uid()}));
+    // Nilai aljabar AWAL tiap sisi (snapshot saat level dimulai). Karena soal
+    // yang diberikan (mis. "3x - 2 = 7") SECARA DEFINISI kedua sisinya sudah
+    // setara, timbangan harus tampil RATA di kondisi awal ini. Snapshot ini
+    // lah acuan "seimbang" -> lihat computeTilt().
+    this.l0 = compileTiles(this.left);
+    this.r0 = compileTiles(this.right);
     this.d0 = this.diff();
     this.stepIndex = 0;
+    // Reset status "bangunan" timbangan & state langkah bagi-rata setiap kali level dimulai/diulang
+    this._built = false;
+    this.dividePool = null;
+    this.divideGroups = null;
     selectedTile = null;
 
     renderBankSelector(document.getElementById('bankPanel'), { types:['x','unit'], allowNeg:true });
@@ -1474,27 +1542,55 @@ const ScaleEngine = {
     const l = compileTiles(this.left), r = compileTiles(this.right);
     return { x: l.x - r.x, unit: l.unit - r.unit };
   },
-  // Hitung derajat kemiringan timbangan berdasarkan jumlah ubin di tiap sisi,
-  // supaya timbangan terasa "bergerak naik turun" setiap kali ubin ditambah/dikurangi.
+  // Hitung SELISIH nilai aljabar tiap sisi dibanding kondisi AWALnya sendiri
+  // (bukan nilai absolut sisi kiri vs kanan secara langsung). Ini penting:
+  // karena soalnya sudah berupa PERSAMAAN (mis. 3x - 2 = 7), kedua sisi
+  // MEMANG bernilai setara sejak awal -> timbangan harus rata di kondisi
+  // awal. Ia hanya boleh miring saat satu sisi berubah (ubin ditambah/
+  // dikurangi) sementara sisi lain belum "dicerminkan" dengan perubahan
+  // yang sama -> itulah sinyal "kamu belum menyeimbangkan operasimu".
+  // Pasangan nol yang dihilangkan tidak mengubah nilai (sudah netral sejak
+  // digabung), jadi tidak memengaruhi kemiringan sama sekali.
+  algebraicDelta(arr, base){
+    const c = compileTiles(arr);
+    return (c.x2||0)-(base.x2||0) + (c.x||0)-(base.x||0) + (c.unit||0)-(base.unit||0);
+  },
   computeTilt(){
-    const diff = this.right.length - this.left.length; // + => kanan lebih berat
+    const deltaLeft = this.algebraicDelta(this.left, this.l0);
+    const deltaRight = this.algebraicDelta(this.right, this.r0);
+    const diff = deltaRight - deltaLeft; // + => sisi kanan mendapat "tambahan" lebih banyak -> lebih berat
     const deg = Math.max(-13, Math.min(13, diff * 2.6));
     return deg;
   },
+  // ------------------------------------------------------------------
+  // PERBAIKAN UTAMA: sebelumnya seluruh rig timbangan (beam-bar, pan-col,
+  // dst) dibuat ULANG dari nol (document.createElement) setiap kali ada
+  // perubahan ubin. Akibatnya CSS transition pada .beam-bar/.pan-col
+  // tidak pernah berjalan (elemen baru tidak punya "nilai transform lama"
+  // untuk dianimasikan dari situ) -> timbangan terlihat "meloncat/patah",
+  // bukan bergerak naik-turun secara halus.
+  // Solusinya: bangun rig HANYA SEKALI (buildRig), lalu untuk perubahan
+  // berikutnya cukup panggil updateWork() yang mengubah isi & style pada
+  // elemen yang SAMA, sehingga transition benar-benar teranimasi.
+  // ------------------------------------------------------------------
   renderWork(){
     const work = document.getElementById('workArea');
+    const step = this.currentStep();
+    if(step.action === 'divide'){
+      this._built = false; // rig timbangan biasa perlu dibangun ulang saat kembali dari mode bagi-rata
+      this.renderDivideWork(work);
+      return;
+    }
+    if(!this._built){
+      this.buildRig(work);
+    }
+    this.updateWork();
+  },
+  buildRig(work){
     work.innerHTML = '';
     const wrap = document.createElement('div'); wrap.className='scale-wrap';
-
-    const eq = document.createElement('div'); eq.className='eq-display'; eq.textContent = this.lvl.eq;
-
-    // Titik-titik progres langkah
+    const eq = document.createElement('div'); eq.className='eq-display';
     const dots = document.createElement('div'); dots.className='step-progress';
-    this.lvl.steps.forEach((s,i)=>{
-      const d = document.createElement('div');
-      d.className = 'step-dot' + (i<this.stepIndex? ' done' : (i===this.stepIndex? ' now':''));
-      dots.appendChild(d);
-    });
 
     const rig = document.createElement('div'); rig.className='scale-rig';
     const pivotStand = document.createElement('div'); pivotStand.className='pivot-stand';
@@ -1502,45 +1598,87 @@ const ScaleEngine = {
     const beamBar = document.createElement('div'); beamBar.className='beam-bar';
     const panRow = document.createElement('div'); panRow.className='pan-row';
 
+    const makeCol = ()=>{
+      const col = document.createElement('div'); col.className='pan-col';
+      const chain = document.createElement('div'); chain.className='chain';
+      const lbl = document.createElement('div'); lbl.className='pan-label';
+      const pan = document.createElement('div'); pan.className='pan dropzone';
+      col.appendChild(chain); col.appendChild(lbl); col.appendChild(pan);
+      return {col, lbl, pan};
+    };
+    const L = makeCol(), R = makeCol();
+    L.lbl.textContent = 'Sisi Kiri';
+    R.lbl.textContent = 'Sisi Kanan';
+    L.pan._onDrop = (type, sign)=>{ this.left.push({type, sign, id:uid()}); this.updateWork(); };
+    R.pan._onDrop = (type, sign)=>{ this.right.push({type, sign, id:uid()}); this.updateWork(); };
+
+    panRow.appendChild(L.col); panRow.appendChild(R.col);
+    rig.appendChild(pivotStand); rig.appendChild(pivotCap); rig.appendChild(beamBar); rig.appendChild(panRow);
+
+    const tiltHint = document.createElement('div'); tiltHint.className='tilt-hint';
+    tiltHint.textContent = '⚖️ Perubahan ubin di kedua sisi belum sama — timbangan miring sementara.';
+
+    wrap.appendChild(eq); wrap.appendChild(dots); wrap.appendChild(rig); wrap.appendChild(tiltHint);
+    work.appendChild(wrap);
+
+    this.elWrap = wrap; this.elEq = eq; this.elDots = dots; this.elBeam = beamBar;
+    this.elLeftCol = L.col; this.elLeftLabel = L.lbl; this.elLeftPan = L.pan;
+    this.elRightCol = R.col; this.elRightLabel = R.lbl; this.elRightPan = R.pan;
+    this.elTiltHint = tiltHint;
+    this._built = true;
+  },
+  // Mengisi ulang konten (bukan membangun ulang bingkai) supaya transisi CSS tetap berjalan.
+  updateWork(){
+    this.elEq.textContent = this.lvl.eq;
+
+    this.elDots.innerHTML = '';
+    this.lvl.steps.forEach((s,i)=>{
+      const d = document.createElement('div');
+      d.className = 'step-dot' + (i<this.stepIndex? ' done' : (i===this.stepIndex? ' now':''));
+      this.elDots.appendChild(d);
+    });
+
+    const fillPan = (panEl, arr)=>{
+      panEl.innerHTML = '';
+      arr.forEach(t=>{
+        const el = makeTileEl(t.type, t.sign, {sz:'board', cls:'pop-in'});
+        el.dataset.id = t.id;
+        el.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const i = arr.findIndex(x=>x.id===t.id);
+          if(i>-1) arr.splice(i,1);
+          this.updateWork();
+        });
+        panEl.appendChild(el);
+      });
+    };
+    fillPan(this.elLeftPan, this.left);
+    fillPan(this.elRightPan, this.right);
+
+    const deltaLeft = this.algebraicDelta(this.left, this.l0);
+    const deltaRight = this.algebraicDelta(this.right, this.r0);
+    const leftHeavier = deltaLeft > deltaRight;
+    const rightHeavier = deltaRight > deltaLeft;
+    this.elLeftPan.classList.toggle('tip-heavy', leftHeavier);
+    this.elRightPan.classList.toggle('tip-heavy', rightHeavier);
+    this.elLeftLabel.textContent = 'Sisi Kiri' + (leftHeavier? ' ⬇️' : '');
+    this.elRightLabel.textContent = 'Sisi Kanan' + (rightHeavier? ' ⬇️' : '');
+
     const tiltDeg = this.computeTilt();
     const tiltRad = tiltDeg * Math.PI/180;
     const armPx = 46; // jarak vertikal maksimum pergerakan piringan
     const leftY = -Math.sin(tiltRad) * armPx;   // kanan berat -> kiri naik (negatif)
     const rightY = Math.sin(tiltRad) * armPx;   // kanan berat -> kanan turun (positif)
 
-    beamBar.style.transform = `rotate(${tiltDeg}deg)`;
+    // Karena elBeam & elLeftCol/elRightCol adalah elemen YANG SAMA di setiap
+    // pemanggilan (bukan elemen baru), CSS transition pada properti transform
+    // ini benar-benar teranimasi -> efek naik-turun terlihat halus.
+    this.elBeam.style.transform = `rotate(${tiltDeg}deg)`;
+    this.elLeftCol.style.transform = `translateY(${leftY}px)`;
+    this.elRightCol.style.transform = `translateY(${rightY}px)`;
 
-    const makePan = (arr, sideLabel, sideY, heavier)=>{
-      const col = document.createElement('div'); col.className='pan-col';
-      col.style.transform = `translateY(${sideY}px)`;
-      const chain = document.createElement('div'); chain.className='chain';
-      const lbl = document.createElement('div'); lbl.className='pan-label'; lbl.textContent = sideLabel + (heavier? ' ⬇️' : '');
-      const pan = document.createElement('div'); pan.className='pan dropzone' + (heavier? ' tip-heavy' : '');
-      arr.forEach(t=>{
-        const el = makeTileEl(t.type, t.sign, {sz:'board', cls:'pop-in'});
-        el.addEventListener('click', (e)=>{ e.stopPropagation(); const i=arr.findIndex(x=>x.id===t.id); arr.splice(i,1); this.renderWork(); });
-        pan.appendChild(el);
-      });
-      pan._onDrop = (type, sign)=>{
-        arr.push({type, sign, id:uid()});
-        this.renderWork();
-      };
-      col.appendChild(chain); col.appendChild(lbl); col.appendChild(pan);
-      return col;
-    };
+    this.elTiltHint.style.display = (deltaLeft !== deltaRight) ? '' : 'none';
 
-    panRow.appendChild(makePan(this.left, 'Sisi Kiri', leftY, this.left.length>this.right.length));
-    panRow.appendChild(makePan(this.right, 'Sisi Kanan', rightY, this.right.length>this.left.length));
-
-    rig.appendChild(pivotStand); rig.appendChild(pivotCap); rig.appendChild(beamBar); rig.appendChild(panRow);
-
-    wrap.appendChild(eq); wrap.appendChild(dots); wrap.appendChild(rig);
-    if(this.left.length !== this.right.length){
-      const tip = document.createElement('div'); tip.className='tilt-hint';
-      tip.textContent = '⚖️ Jumlah ubin di kedua sisi belum sama banyak — timbangan miring.';
-      wrap.appendChild(tip);
-    }
-    work.appendChild(wrap);
     this.updateExprPill();
     this.syncExprText();
   },
@@ -1563,17 +1701,25 @@ const ScaleEngine = {
         <div class="status-label">Persamaan Saat Ini</div>
         <div class="status-val" id="statusExpr" style="font-size:.95rem;"></div>
       </div>
+      ${step.action==='divide' ? `
+      <div class="status-box">
+        <div class="status-label">Nilai x yang kamu temukan</div>
+        <div class="divide-input-row">
+          <span class="xlbl">x =</span>
+          <input type="number" step="1" class="divide-input" id="divideXInput" placeholder="?">
+        </div>
+      </div>` : ''}
       <div class="status-actions">
         ${step.action==='check' ? `<button class="btn btn-primary btn-block" id="btnStepCheck">✅ Cek Langkah</button>` : ''}
         ${step.action==='zero' ? `<button class="btn btn-accent btn-block" id="btnZero">💥 Hilangkan Pasangan Nol</button>` : ''}
-        ${step.action==='divide' ? `<button class="btn btn-primary btn-block" id="btnDivide">➗ Bagi Rata</button>` : ''}
+        ${step.action==='divide' ? `<button class="btn btn-primary btn-block" id="btnDivideCheck">✅ Cek Jawaban</button>` : ''}
         <button class="btn btn-clear btn-block" id="btnReset">↩️ Ulangi dari Awal</button>
       </div>
     `;
     this.syncExprText();
     if(step.action==='check') document.getElementById('btnStepCheck').addEventListener('click', ()=> this.checkStep());
     if(step.action==='zero') document.getElementById('btnZero').addEventListener('click', ()=> this.zeroPair());
-    if(step.action==='divide') document.getElementById('btnDivide').addEventListener('click', ()=> this.divide());
+    if(step.action==='divide') document.getElementById('btnDivideCheck').addEventListener('click', ()=> this.checkDivide());
     document.getElementById('btnReset').addEventListener('click', ()=> this.start(this.m, this.lvl));
   },
   syncExprText(){
@@ -1600,52 +1746,182 @@ const ScaleEngine = {
     }
     this.advanceStep();
   },
-  zeroPairOnSide(arr){
-    let removed = false;
+  // Mencari pasangan +1/-1 (per jenis ubin) TANPA langsung menghapusnya dari array,
+  // supaya animasi "vanish" bisa dimainkan dulu di elemen DOM sebelum datanya dibuang.
+  findZeroPairIds(arr){
+    const ids = [];
     ['x','unit'].forEach(type=>{
       const pos = arr.filter(t=>t.type===type && t.sign>0);
       const neg = arr.filter(t=>t.type===type && t.sign<0);
       const n = Math.min(pos.length, neg.length);
-      for(let i=0;i<n;i++){
-        removed = true;
-        const idA = pos[i].id, idB = neg[i].id;
-        const ia = arr.findIndex(x=>x.id===idA); if(ia>-1) arr.splice(ia,1);
-        const ib = arr.findIndex(x=>x.id===idB); if(ib>-1) arr.splice(ib,1);
-      }
+      for(let i=0;i<n;i++){ ids.push(pos[i].id, neg[i].id); }
     });
-    return removed;
+    return ids;
+  },
+  removeByIds(arr, idSet){
+    for(let i=arr.length-1;i>=0;i--){ if(idSet.has(arr[i].id)) arr.splice(i,1); }
   },
   zeroPair(){
-    const r1 = this.zeroPairOnSide(this.left);
-    const r2 = this.zeroPairOnSide(this.right);
-    if(!r1 && !r2){ toast('Tidak ada pasangan nol yang bisa dihilangkan saat ini.'); return; }
-    this.renderWork();
+    const idsLeft = this.findZeroPairIds(this.left);
+    const idsRight = this.findZeroPairIds(this.right);
+    if(idsLeft.length===0 && idsRight.length===0){
+      toast('Tidak ada pasangan nol yang bisa dihilangkan saat ini.');
+      return;
+    }
+    const allIds = new Set([...idsLeft, ...idsRight]);
+    // Mainkan animasi "meledak/menghilang" pada ubin yang akan dibuang (seperti alge_play_plsv.html)
+    [this.elLeftPan, this.elRightPan].forEach(pan=>{
+      if(!pan) return;
+      Array.from(pan.children).forEach(el=>{
+        if(allIds.has(el.dataset.id)) el.classList.add('zero-pair-anim');
+      });
+    });
+    const btn = document.getElementById('btnZero');
+    if(btn) btn.disabled = true;
     toast('💥 Pasangan nol dihilangkan!');
-    this.advanceStep();
+    setTimeout(()=>{
+      this.removeByIds(this.left, new Set(idsLeft));
+      this.removeByIds(this.right, new Set(idsRight));
+      this.updateWork();
+      this.advanceStep();
+    }, 620);
   },
-  divide(){
-    const d = this.diff();
-    if(d.x !== this.d0.x || d.unit !== this.d0.unit){
-      showResultModal({icon:'⚖️', title:'Timbangan Tidak Seimbang', body:'Sepertinya kamu menambahkan ubin hanya ke satu sisi. Ingat, apa pun yang kamu lakukan di satu sisi harus dilakukan juga di sisi lain agar tetap seimbang!', actionText:'Oke, Saya Perbaiki'});
-      return;
-    }
+  // ------------------------------------------------------------------
+  // LANGKAH "BAGI RATA": tidak lagi berupa tombol otomatis. Pengguna harus
+  // men-drag ubin satuan dari "kumpulan" ke bawah masing-masing ubin x agar
+  // terbagi rata, lalu menuliskan sendiri nilai x, baru kemudian dicek.
+  // ------------------------------------------------------------------
+  initDivide(){
     const lc = compileTiles(this.left), rc = compileTiles(this.right);
-    if(lc.unit!==0 || lc.x<=0){
-      showResultModal({icon:'🤔', title:'Belum Siap Dibagi', body:'Sisi kiri harus tersisa hanya ubin <b>x positif</b> saja (tanpa ubin satuan) sebelum dibagi.', actionText:'Oke'});
+    this.divideNumX = Math.max(1, lc.x || this.left.filter(t=>t.type==='x').length);
+    this.dividePoolSign = this.right.length ? this.right[0].sign : 1;
+    this.dividePool = this.right.map(t=>({...t}));
+    this.divideGroups = Array.from({length:this.divideNumX}, ()=>[]);
+  },
+  moveDivideTile(moveFrom, targetArr){
+    if(!moveFrom) return;
+    const { arr, id } = moveFrom;
+    if(arr === targetArr) return;
+    const idx = arr.findIndex(t=>t.id===id);
+    if(idx===-1) return;
+    const [tile] = arr.splice(idx,1);
+    targetArr.push(tile);
+    this.renderWork();
+  },
+  renderDivideWork(work){
+    if(!this.divideGroups) this.initDivide();
+    work.innerHTML = '';
+
+    // Selama langkah bagi-rata, ubin baru tidak perlu diambil dari Bank —
+    // semua ubin yang perlu dibagi sudah tersedia di kumpulan bawah.
+    const bankPanel = document.getElementById('bankPanel');
+    if(bankPanel){
+      bankPanel.innerHTML = `<h3>Bank Ubin</h3><div class="legend-mini">🔒 Bank dikunci sementara. Semua ubin satuan yang perlu dibagi sudah ada di <b>kumpulan</b> di bawah papan kerja — seret dari sana.</div>`;
+    }
+
+    const wrap = document.createElement('div'); wrap.className='scale-wrap';
+    const eq = document.createElement('div'); eq.className='eq-display'; eq.textContent = this.lvl.eq;
+
+    const dots = document.createElement('div'); dots.className='step-progress';
+    this.lvl.steps.forEach((s,i)=>{
+      const d = document.createElement('div');
+      d.className = 'step-dot' + (i<this.stepIndex? ' done' : (i===this.stepIndex? ' now':''));
+      dots.appendChild(d);
+    });
+
+    const hintText = document.createElement('div'); hintText.className='divide-hint-text';
+    hintText.innerHTML = `Seret ubin satuan dari <b>kumpulan</b> di bawah ke tiap kotak di bawah ubin <b>x</b> sampai jumlahnya <b>sama rata</b>, lalu tuliskan nilai x di panel kanan.`;
+
+    const board = document.createElement('div'); board.className='divide-board';
+    const groupsRow = document.createElement('div'); groupsRow.className='divide-groups-row';
+
+    this.divideGroups.forEach((grp, gi)=>{
+      const col = document.createElement('div'); col.className='divide-group-col';
+      const cap = document.createElement('div'); cap.className='divide-group-caption'; cap.textContent = `Kelompok ${gi+1}`;
+      const xTile = makeTileEl('x', 1, {sz:'board', cls:'locked'});
+      const zone = document.createElement('div'); zone.className='divide-group-zone dropzone';
+
+      grp.forEach(t=>{
+        const el = makeTileEl('unit', t.sign, {sz:'board', cls:'pop-in'});
+        el.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const idx = grp.findIndex(x=>x.id===t.id);
+          if(idx>-1){ const [rt] = grp.splice(idx,1); this.dividePool.push(rt); }
+          this.renderWork();
+        });
+        enableInstanceDrag(el, t, grp);
+        zone.appendChild(el);
+      });
+      zone._onDrop = (type, sign, moveFrom)=>{
+        if(type!=='unit'){ toast('Hanya ubin satuan yang bisa ditaruh di kelompok ini.'); return; }
+        if(!moveFrom){ toast('Seret ubin dari kumpulan di bawah papan kerja 👇'); return; }
+        this.moveDivideTile(moveFrom, grp);
+      };
+
+      const counts = this.divideGroups.map(g=>g.length);
+      const balanced = this.dividePool.length===0 && counts.every(c=>c===counts[0]);
+      if(balanced) zone.classList.add('divide-balanced');
+
+      col.appendChild(cap); col.appendChild(xTile); col.appendChild(zone);
+      groupsRow.appendChild(col);
+    });
+    board.appendChild(groupsRow);
+
+    const poolWrap = document.createElement('div'); poolWrap.className='divide-pool dropzone';
+    if(this.dividePool.length===0) poolWrap.classList.add('divide-empty');
+    const poolLabel = document.createElement('div'); poolLabel.className='divide-pool-label';
+    poolLabel.textContent = this.dividePool.length===0
+      ? '✅ Semua ubin sudah terbagi!'
+      : `Kumpulan Ubin Satuan (sisa ${this.dividePool.length})`;
+    const poolTiles = document.createElement('div'); poolTiles.className='divide-pool-tiles';
+    this.dividePool.forEach(t=>{
+      const el = makeTileEl('unit', t.sign, {sz:'board', cls:'pop-in'});
+      enableInstanceDrag(el, t, this.dividePool);
+      poolTiles.appendChild(el);
+    });
+    poolWrap.appendChild(poolLabel); poolWrap.appendChild(poolTiles);
+    poolWrap._onDrop = (type, sign, moveFrom)=>{
+      if(!moveFrom) return;
+      this.moveDivideTile(moveFrom, this.dividePool);
+    };
+    board.appendChild(poolWrap);
+
+    wrap.appendChild(eq); wrap.appendChild(dots); wrap.appendChild(hintText); wrap.appendChild(board);
+    work.appendChild(wrap);
+
+    document.getElementById('exprPill').textContent = `${this.divideNumX}x  =  ${formatExpr(compileTiles(this.right))}`;
+  },
+  checkDivide(){
+    if(!this.divideGroups) this.initDivide();
+    if(this.dividePool.length > 0){
+      showResultModal({icon:'🤔', title:'Belum Selesai Membagi', body:`Masih ada <b>${this.dividePool.length}</b> ubin di kumpulan bawah yang belum kamu pindahkan. Seret semua ubin itu ke salah satu kelompok x.`, actionText:'Oke'});
       return;
     }
-    if(rc.x!==0){
-      showResultModal({icon:'🤔', title:'Belum Siap Dibagi', body:'Sisi kanan harus tersisa hanya ubin satuan saja (tanpa ubin x).', actionText:'Oke'});
+    const counts = this.divideGroups.map(g=>g.length);
+    const allEqual = counts.every(c=>c===counts[0]);
+    if(!allEqual){
+      showResultModal({icon:'🤔', title:'Belum Merata', body:'Jumlah ubin satuan di setiap kelompok x harus <b>sama banyak</b>. Geser ubinnya lagi supaya rata di semua kelompok.', actionText:'Coba Lagi'});
       return;
     }
-    if(rc.unit % lc.x !== 0){
-      showResultModal({icon:'🤔', title:'Belum Bisa Dibagi Rata', body:'Jumlah ubin satuan di kanan tidak habis dibagi jumlah ubin x di kiri. Periksa kembali langkahmu.', actionText:'Oke'});
+    const inputEl = document.getElementById('divideXInput');
+    const raw = inputEl ? inputEl.value.trim() : '';
+    if(raw===''){
+      showResultModal({icon:'🤔', title:'Isi Dulu Nilai x', body:'Tuliskan nilai x yang kamu temukan pada kotak di panel kanan sebelum mengecek jawaban.', actionText:'Oke'});
       return;
     }
-    const val = rc.unit / lc.x;
+    const val = Number(raw);
+    if(Number.isNaN(val)){
+      showResultModal({icon:'🤔', title:'Nilai Tidak Valid', body:'Masukkan angka yang valid untuk nilai x.', actionText:'Oke'});
+      return;
+    }
+    const expected = counts[0] * this.dividePoolSign;
+    if(val !== expected){
+      showResultModal({icon:'🤔', title:'Nilai x Belum Tepat', body:`Nilai x yang kamu masukkan (<b>${val}</b>) belum sesuai dengan hasil pembagian ubin di papan kerja. Hitung ulang: setiap kelompok berisi ${counts[0]} ubin ${this.dividePoolSign<0?'negatif':'positif'}.`, actionText:'Coba Lagi'});
+      return;
+    }
     showResultModal({
       icon:'🎉', title:'Persamaan Terpecahkan!',
-      body:`Setelah dibagi rata, ditemukan <b>x = ${val}</b>. Timbangan tetap seimbang di setiap langkah — itulah kunci menyelesaikan persamaan linear!`,
+      body:`Setelah dibagi rata, ditemukan <b>x = ${expected}</b>. Timbangan tetap seimbang di setiap langkah — itulah kunci menyelesaikan persamaan linear!`,
       actionText:'Lanjut ▶️', action:()=>nextLevelOrComplete(this.m)
     });
   }
