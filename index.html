@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Algebra Tiles : Ubin Aljabar</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;600;700;800&display=swap');
+
+:root{
+  --u: clamp(24px, 4.2vw, 34px);
+  --len: calc(var(--u) * 3);
+  --bg:#F5F3ED;
+  --panel:#FFFFFF;
+  --ink:#232733;
+  --ink-soft:#6B7280;
+  --primary:#3454D1;
+  --primary-dark:#25399C;
+  --accent:#FFB100;
+  --accent-dark:#C97F00;
+  --pos:#2F9E68;
+  --pos-dark:#1F7A50;
+  --neg:#E23E57;
+  --neg-dark:#B5253C;
+  --success:#2F9E68;
+  --danger:#E23E57;
+  --line:#E4E0D4;
+  --radius:18px;
+  --shadow: 0 8px 24px rgba(35,39,51,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+html,body{height:100%;margin:0;}
+body{
+  font-family:'Inter',sans-serif; background:var(--bg); color:var(--ink);
+  height:100dvh; height:100vh; overflow:hidden; display:flex; flex-direction:column;
+}
+h1,h2,h3,.brand,.headline{font-family:'Baloo 2',cursive;}
+button{font-family:inherit;}
+#app{display:flex;flex-direction:column;height:100%;}
+
+/* ===== APPBAR ===== */
+.appbar{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:10px 16px; background:linear-gradient(120deg,var(--primary),var(--primary-dark));
+  color:#fff; box-shadow:0 2px 14px rgba(0,0,0,.18); z-index:30; flex-shrink:0;
+}
+.appbar .left{display:flex;align-items:center;gap:10px;min-width:0;}
+.brand{font-weight:700;font-size:1.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brand small{display:block;font-family:'Inter';font-weight:400;font-size:.68rem;opacity:.85;}
+.iconbtn{
+  background:rgba(255,255,255,.2); border:none; color:#fff; width:40px;height:40px;border-radius:12px;
+  font-size:1.1rem; cursor:pointer; display:flex; align-items:center;justify-content:center; flex-shrink:0;
+}
+.iconbtn:active{transform:scale(0.92);}
+.level-pill{
+  background:rgba(255,255,255,.22); border:1px solid rgba(255,255,255,.5); padding:6px 14px;
+  border-radius:20px; font-weight:800; font-size:.85rem; white-space:nowrap;
+}
+
+/* ===== SCREENS ===== */
+#view{flex:1; position:relative; overflow:hidden;}
+.screen{position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; display:none; -webkit-overflow-scrolling:touch;}
+.screen.active{display:block;}
+
+/* ===== HOME ===== */
+.home-wrap{max-width:720px;margin:0 auto;padding:20px 16px 70px;}
+.hero{
+  background:linear-gradient(135deg,#fff,#EFF2FF); border:1px solid var(--line); border-radius:24px;
+  padding:22px 20px; box-shadow:var(--shadow); margin-bottom:22px; position:relative; overflow:hidden;
+}
+.hero h1{font-size:1.5rem;margin:0 0 6px;color:var(--primary-dark);}
+.hero p{margin:0 0 14px;color:var(--ink-soft);line-height:1.5;font-size:.95rem;}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.legend-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:var(--ink-soft);}
+.legend-swatch{width:20px;height:20px;border-radius:5px;flex-shrink:0;}
+
+.progress-track{background:var(--line);height:8px;border-radius:6px;overflow:hidden;margin-top:14px;}
+.progress-fill{background:linear-gradient(90deg,var(--pos),#54c98a);height:100%;border-radius:6px;transition:width .4s;}
+
+/* ===== MODE SELECT ===== */
+.mode-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:6px;}
+@media (min-width:640px){ .mode-grid{grid-template-columns:1fr 1fr;} }
+.mode-card{
+  background:var(--panel); border:2px solid var(--line); border-radius:20px; padding:20px 18px;
+  box-shadow:var(--shadow); cursor:pointer; transition:transform .15s, border-color .15s; text-align:left;
+}
+.mode-card:active{transform:scale(0.98);}
+.mode-card:hover{border-color:var(--primary);}
+.mode-card .mode-icon{font-size:2rem;margin-bottom:8px;}
+.mode-card h3{margin:0 0 6px;font-size:1.1rem;color:var(--primary-dark);}
+.mode-card p{margin:0;font-size:.86rem;color:var(--ink-soft);line-height:1.5;}
+.mode-card .mode-tag{display:inline-block;margin-top:10px;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:3px 10px;border-radius:20px;background:#E7ECFC;color:var(--primary);}
+
+.path{position:relative;padding-left:6px;}
+.node{
+  display:flex; gap:16px; align-items:flex-start; position:relative; padding-bottom:26px; cursor:pointer;
+}
+.node:last-child{padding-bottom:0;}
+.node::before{
+  content:''; position:absolute; left:27px; top:56px; bottom:0; width:3px; background:var(--line); z-index:0;
+}
+.node:last-child::before{display:none;}
+.node.done::before{background:var(--pos);}
+.node-badge{
+  width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem; flex-shrink:0; z-index:1; box-shadow:0 4px 10px rgba(0,0,0,.12); border:3px solid #fff;
+  background:#D9DCE6; color:#8A8FA3;
+}
+.node.unlocked .node-badge{background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:#fff;}
+.node.done .node-badge{background:linear-gradient(135deg,var(--pos),var(--pos-dark)); color:#fff;}
+.node-card{
+  flex:1; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px 16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.05); transition:transform .15s;
+}
+.node.locked .node-card{opacity:.55;}
+.node:not(.locked):active .node-card{transform:scale(0.98);}
+.node-title{font-weight:800;font-size:1rem;margin-bottom:3px;}
+.node-desc{font-size:.83rem;color:var(--ink-soft);line-height:1.4;margin-bottom:8px;}
+.node-status{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:3px 10px;border-radius:20px;display:inline-block;}
+.node-status.locked{background:#EDEEF3;color:#9096A8;}
+.node-status.unlocked{background:#E7ECFC;color:var(--primary);}
+.node-status.done{background:#E4F6EC;color:var(--pos-dark);}
+
+/* ===== BUTTONS ===== */
+.btn{
+  border:none;border-radius:12px;font-weight:800;cursor:pointer;padding:12px 18px;font-size:.95rem;
+  transition:transform .12s, box-shadow .12s; text-align:center;
+}
+.btn:active{transform:translateY(2px);}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 0 var(--primary-dark);}
+.btn-accent{background:var(--accent);color:#4a3400;box-shadow:0 4px 0 var(--accent-dark);}
+.btn-ghost{background:#fff;color:var(--primary);border:2px solid var(--primary);}
+.btn-clear{background:#ECEEF2;color:#6B7280;box-shadow:0 4px 0 #D7DAE1;}
+.btn-danger{background:var(--danger);color:#fff;box-shadow:0 4px 0 var(--neg-dark);}
+.btn-block{display:block;width:100%;margin-bottom:10px;}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+/* ===== MODULE LAYOUT ===== */
+.module-layout{display:flex; height:100%;}
+.panel-bank{
+  width:220px; background:var(--panel); padding:14px; overflow-y:auto; border-right:1px solid var(--line);
+  flex-shrink:0; display:flex; flex-direction:column; gap:12px;
+}
+.panel-bank h3{font-size:.78rem;text-transform:uppercase;color:var(--ink-soft);letter-spacing:.5px;margin:0 0 6px;}
+.bank-group{background:var(--bg);border-radius:14px;padding:10px;}
+.bank-row{display:flex;gap:10px;align-items:flex-end;justify-content:center;flex-wrap:wrap;}
+.bank-slot{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:grab;padding:4px;border-radius:10px;border:2px solid transparent;touch-action:none;}
+.bank-slot.selected{border-color:var(--primary);background:#EAF0FF;opacity:.45;}
+.bank-slot .lbl{font-size:.68rem;font-weight:800;color:var(--ink-soft);}
+.legend-mini{margin-top:auto;font-size:.72rem;color:var(--ink-soft);line-height:1.5;background:var(--bg);border-radius:12px;padding:10px;}
+
+.panel-work{flex:1; position:relative; overflow:auto; display:flex; flex-direction:column; align-items:center; padding:16px;
+  background-image: radial-gradient(circle, #E7E4D8 1.5px, transparent 1.5px); background-size:26px 26px;
+}
+.work-toolbar{display:flex; gap:10px; align-items:center; justify-content:center; margin-bottom:14px; flex-wrap:wrap;}
+.pill{background:#fff;border:1px solid var(--line);border-radius:20px;padding:8px 16px;font-weight:800;font-size:.85rem;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.05);color:var(--primary-dark);}
+.expr-pill{background:var(--ink);color:#fff;border-radius:20px;padding:8px 18px;font-weight:800;font-size:1rem;font-family:'Courier New',monospace;}
+.work-area{flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; min-height:200px;}
+
+.panel-status{
+  width:300px; background:var(--panel); padding:16px; border-left:1px solid var(--line); overflow-y:auto;
+  flex-shrink:0; display:flex; flex-direction:column;
+}
+.mission-card{background:#FDF6EC; border:2px solid #F3D9A8; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
+.mission-badge{display:inline-block;background:var(--accent);color:#4a3400;font-size:.68rem;font-weight:800;padding:2px 10px;border-radius:10px;text-transform:uppercase;margin-bottom:6px;}
+.mission-title{font-weight:800;font-size:1.02rem;margin-bottom:6px;color:#8A5300;}
+.mission-desc{font-size:.88rem;line-height:1.55;color:#4a4436;}
+.mission-desc b{color:#232733;}
+.mission-hint{margin-top:8px;font-size:.8rem;background:#EAF3FF;border-left:4px solid var(--primary);padding:8px 10px;border-radius:0 8px 8px 0;color:var(--primary-dark);}
+.status-box{background:var(--bg);border-radius:12px;padding:10px 14px;text-align:center;margin-bottom:14px;}
+.status-label{font-size:.72rem;color:var(--ink-soft);text-transform:uppercase;font-weight:800;letter-spacing:.5px;}
+.status-val{font-size:1.15rem;font-weight:800;font-family:'Courier New',monospace;color:var(--primary-dark);}
+.status-actions{margin-top:auto;}
+
+/* ===== FREEBOARD ===== */
+.freeboard-area{
+  width:100%; max-width:560px; min-height:200px; background:rgba(255,255,255,.7); border:3px dashed #C9C4B2;
+  border-radius:18px; display:flex; flex-wrap:wrap; align-content:flex-start; gap:6px; padding:16px;
+}
+.freeboard-area.empty::after{content:'Seret ubin dari Bank Ubin ke area ini untuk menaruhnya.'; color:#9A947F; font-style:italic; font-size:.85rem;}
+
+/* ===== TILES ===== */
+.tile{display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;border-radius:7px;
+  user-select:none; box-shadow:inset 0 -4px 0 rgba(0,0,0,.14), 0 2px 5px rgba(0,0,0,.18); position:relative; cursor:pointer;}
+.tile.pos{background:var(--pos);}
+.tile.neg{background:var(--neg);}
+.tile.placeholder{background:transparent;box-shadow:none;border:2px dashed #C9C4B2;cursor:pointer;}
+.tile.locked{cursor:default;}
+.tile:active{transform:scale(0.94);}
+
+.sz-board.t-x2{width:var(--len);height:var(--len);font-size:calc(var(--u)*.5);}
+.sz-board.t-x{width:var(--u);height:var(--len);font-size:calc(var(--u)*.4);}
+.sz-board.t-x.horiz{width:var(--len);height:var(--u);}
+.sz-board.t-unit{width:var(--u);height:var(--u);font-size:calc(var(--u)*.4);}
+
+.sz-bank.t-x2{width:52px;height:52px;font-size:1.15rem;}
+.sz-bank.t-x{width:20px;height:52px;font-size:.72rem;}
+.sz-bank.t-unit{width:26px;height:26px;font-size:.68rem;}
+
+.sz-mini.t-x2{width:30px;height:30px;font-size:.72rem;}
+.sz-mini.t-x{width:12px;height:30px;font-size:.5rem;}
+.sz-mini.t-unit{width:15px;height:15px;font-size:.5rem;}
+
+.fade-out{animation:fadeOut .7s forwards;}
+@keyframes fadeOut{0%{transform:scale(1);opacity:1;}50%{transform:scale(1.25);opacity:.6;filter:brightness(1.4);}100%{transform:scale(0);opacity:0;}}
+.pop-in{animation:popIn .25s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes popIn{0%{transform:scale(.4);opacity:0;}100%{transform:scale(1);opacity:1;}}
+
+/* ===== DRAG & DROP (Bank Ubin -> area kerja) ===== */
+.drag-ghost{position:fixed;top:0;left:0;z-index:999;pointer-events:none;transform:translate(-50%,-50%) scale(1.1);filter:drop-shadow(0 10px 16px rgba(0,0,0,.35));opacity:.95;}
+.dropzone{transition:box-shadow .1s, background-color .1s;}
+.dropzone-hover{box-shadow:inset 0 0 0 3px var(--primary);background-color:rgba(52,84,209,.08);}
+
+/* ===== AREA MODEL ===== */
+.area-wrap{display:grid; grid-template-columns:auto auto; grid-template-rows:auto auto; gap:6px; background:#fff; padding:18px; border-radius:18px; box-shadow:var(--shadow);}
+.corner{width:calc(var(--u)*1.1);height:calc(var(--u)*1.1);}
+.zone{display:flex; gap:4px; border:2px dashed #C9C4B2; border-radius:10px; padding:6px; background:#FAFAF7; cursor:pointer; min-width:calc(var(--u)*1.1); min-height:calc(var(--u)*1.1);}
+.zone.top{flex-direction:row; align-items:flex-end; border-bottom:3px solid #C9C4B2;}
+.zone.left{flex-direction:column; align-items:flex-end; border-right:3px solid #C9C4B2;}
+.grid-wrap{display:grid; gap:4px; padding:6px; border:2px dashed #C9C4B2; border-radius:10px; background:#FCFCFA; min-width:calc(var(--u)*1.1); min-height:calc(var(--u)*1.1);}
+.grid-cell{background:rgba(230,230,222,.5); border:1px dashed #D7D3C4; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+.grid-cell.err{outline:3px solid var(--danger);}
+.grid-placeholder{grid-column:1/-1;grid-row:1/-1;display:flex;align-items:center;justify-content:center;color:#9A947F;font-style:italic;font-size:.8rem;text-align:center;padding:10px;}
+
+/* ===== SCALE (PLSV) — Timbangan animasi naik-turun ===== */
+.scale-wrap{display:flex; flex-direction:column; align-items:center; gap:4px; width:100%; max-width:640px;}
+.eq-display{background:#fff; border:3px solid var(--line); border-radius:24px; padding:12px 26px; font-family:'Courier New',monospace; font-weight:800; font-size:1.5rem; color:var(--primary-dark); box-shadow:var(--shadow); margin-bottom:10px;}
+.step-progress{display:flex; align-items:center; gap:6px; margin-bottom:8px;}
+.step-dot{width:9px;height:9px;border-radius:50%;background:var(--line);transition:background .2s, transform .2s;}
+.step-dot.done{background:var(--pos);}
+.step-dot.now{background:var(--primary);transform:scale(1.35);}
+
+.scale-rig{position:relative; width:100%; padding-top:26px; padding-bottom:6px;}
+.pivot-stand{position:absolute; left:50%; top:44px; transform:translateX(-50%); width:0; height:0;
+  border-left:18px solid transparent; border-right:18px solid transparent; border-top:40px solid #8A8FA3; z-index:0;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.15));}
+.pivot-cap{position:absolute; left:50%; top:36px; transform:translateX(-50%); width:18px; height:18px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #fff, #8A8FA3 70%); z-index:3; box-shadow:0 2px 4px rgba(0,0,0,.3);}
+.beam-bar{position:absolute; left:50%; top:38px; width:78%; height:9px; margin-left:-39%;
+  background:linear-gradient(180deg,#C7CCD9,#8A8FA3); border-radius:6px; transform-origin:50% 50%;
+  transition:transform .55s cubic-bezier(.34,1.56,.64,1); box-shadow:0 3px 6px rgba(0,0,0,.2); z-index:1;}
+.pan-row{display:flex; align-items:flex-start; gap:18px; width:100%; position:relative; margin-top:56px; z-index:2;}
+.pan-col{flex:1; display:flex; flex-direction:column; align-items:stretch;
+  transition:transform .55s cubic-bezier(.34,1.56,.64,1);}
+.pan-col .chain{width:3px; height:20px; background:repeating-linear-gradient(#B7BDCB,#B7BDCB 4px,transparent 4px,transparent 7px); margin:0 auto 2px;}
+.pan-label{text-align:center;font-weight:800;color:var(--ink-soft);font-size:.8rem;margin-bottom:4px;}
+.pan{min-height:150px; background:rgba(255,255,255,.85); border:3px dashed #C9C4B2; border-radius:16px 16px 26px 26px; padding:10px; display:flex; flex-wrap:wrap; align-content:flex-start; gap:5px; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,.08);}
+.pan.tip-heavy{border-color:var(--accent-dark); background:rgba(255,177,0,.08);}
+.tilt-hint{text-align:center;font-size:.72rem;color:var(--ink-soft);margin-top:8px;font-style:italic;}
+
+/* ===== SQUARE (KUADRAT) ===== */
+.square-wrap{display:inline-grid; background:#fff; border-radius:18px; padding:16px; box-shadow:var(--shadow);}
+.quad-row{display:flex;}
+.quad-tl{display:flex;align-items:center;justify-content:center;}
+.quad-strip{display:flex; gap:3px; border:2px dashed #C9C4B2; border-radius:8px; padding:4px; background:#FAFAF7; cursor:pointer;}
+.quad-strip.tr{flex-direction:row; align-items:center;}
+.quad-strip.bl{flex-direction:column; align-items:center;}
+.quad-br{display:grid; gap:3px; border:2px dashed #C9C4B2; border-radius:8px; padding:4px; background:#FCFCFA;}
+.quad-br .grid-cell{width:var(--u);height:var(--u);}
+
+/* ===== QUIZ ===== */
+.quiz-card{width:100%; max-width:560px; background:#fff; border-radius:20px; padding:24px; box-shadow:var(--shadow);}
+.quiz-progress{font-size:.78rem;font-weight:800;color:var(--ink-soft);margin-bottom:10px;text-transform:uppercase;}
+.quiz-q{font-size:1.08rem;font-weight:700;margin-bottom:18px;line-height:1.5;}
+.quiz-opt{display:block;width:100%;text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:10px;font-weight:700;font-size:.92rem;cursor:pointer;transition:all .15s;}
+.quiz-opt:hover{border-color:var(--primary);}
+.quiz-opt.correct{background:#E4F6EC;border-color:var(--success);color:var(--pos-dark);}
+.quiz-opt.wrong{background:#FCEAEC;border-color:var(--danger);color:var(--neg-dark);}
+.quiz-opt:disabled{cursor:default;}
+.quiz-explain{font-size:.85rem;background:#EAF3FF;border-left:4px solid var(--primary);padding:10px 12px;border-radius:0 10px 10px 0;margin-top:10px;line-height:1.5;}
+.quiz-result{text-align:center;}
+.quiz-score{font-size:3rem;font-weight:800;color:var(--primary-dark);margin:10px 0;}
+.quiz-badge{font-size:3.4rem;}
+
+/* ===== MODAL ===== */
+.modal-overlay{position:fixed; inset:0; background:rgba(15,20,30,.65); display:none; align-items:center; justify-content:center; z-index:100; padding:16px; backdrop-filter:blur(3px);}
+.modal-overlay.active{display:flex;}
+.modal{background:#fff; border-radius:22px; max-width:480px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 24px 50px rgba(0,0,0,.35); animation:slideDown .25s ease-out;}
+@keyframes slideDown{from{transform:translateY(-24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-body{padding:28px 26px 22px;}
+.modal-icon{font-size:2.8rem;text-align:center;margin-bottom:6px;}
+.modal h2{margin:0 0 12px;font-size:1.3rem;text-align:center;}
+.modal .txt{font-size:.92rem;line-height:1.6;color:#4a4436;}
+.modal-footer{padding:14px 26px 24px;}
+.modal-dots{display:flex;justify-content:center;gap:6px;margin:14px 0 4px;}
+.modal-dots span{width:8px;height:8px;border-radius:50%;background:var(--line);}
+.modal-dots span.on{background:var(--primary);}
+.modal-nav{display:flex;gap:10px;margin-top:8px;}
+.modal-nav .btn{flex:1;}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:14px;font-weight:700;font-size:.88rem;z-index:200;opacity:0;transition:all .25s;box-shadow:0 8px 20px rgba(0,0,0,.3);pointer-events:none;text-align:center;max-width:88vw;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ===== RESPONSIVE (mobile) ===== */
+@media (max-width:880px){
+  .module-layout{flex-direction:column;}
+  .panel-bank{
+    width:100%; order:3; border-right:none; border-top:1px solid var(--line);
+    flex-direction:row; flex-wrap:nowrap; align-items:center; justify-content:space-between;
+    gap:8px; padding:8px 10px; max-height:none; overflow-x:auto;
+  }
+  .panel-bank h3{display:none;}
+  .bank-group{background:none;padding:0;display:flex;gap:8px;}
+  .legend-mini{display:none;}
+  .panel-status{
+    width:100%; order:2; border-left:none; border-top:1px solid var(--line); padding:8px 12px;
+  }
+  .mission-card{display:none;}
+  .status-box{margin-bottom:8px;padding:8px 12px;}
+  .status-actions{display:flex; gap:8px;}
+  .status-actions .btn{flex:1;margin-bottom:0;font-size:.82rem;padding:11px 8px;}
+  .panel-work{order:1;padding:10px;}
+  .work-toolbar{margin-bottom:8px;}
+  :root{--u: clamp(20px, 6vw, 30px);}
+}
+@media (min-width:881px){
+  #btnMissionMobile{display:none;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="appbar">
+    <div class="left">
+      <button class="iconbtn" id="btnBack" title="Beranda">🏠</button>
+      <div class="brand" id="brandText">Algebra Tiles <small>Ubin Aljabar</small></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span class="level-pill" id="levelPill" style="display:none;"></span>
+      <button class="iconbtn" id="btnMissionMobile" title="Instruksi Misi" style="display:none;">📋</button>
+      <button class="iconbtn" id="btnFullscreen" title="Layar Penuh">⛶</button>
+      <button class="iconbtn" id="btnHelp" title="Panduan Aplikasi">❔</button>
+    </div>
+  </header>
+
+  <div id="view">
+    <!-- MODE SELECT -->
+    <div class="screen active" id="screen-mode">
+      <div class="home-wrap" id="modeWrap"></div>
+    </div>
+
+    <!-- HOME -->
+    <div class="screen" id="screen-home">
+      <div class="home-wrap" id="homeWrap"></div>
+    </div>
+
+    <!-- MODULE -->
+    <div class="screen" id="screen-module">
+      <div class="module-layout">
+        <div class="panel-bank" id="bankPanel"></div>
+        <div class="panel-work" id="panelWork">
+          <div class="work-toolbar">
+            <button class="pill" id="btnInstruksi">📋 Lihat Instruksi</button>
+            <div class="expr-pill" id="exprPill">0</div>
+          </div>
+          <div class="work-area" id="workArea"></div>
+        </div>
+        <div class="panel-status" id="statusPanel"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Panduan (paged) -->
+<div class="modal-overlay" id="modalGuide">
+  <div class="modal">
+    <div class="modal-body" id="guideBody"></div>
+    <div class="modal-footer">
+      <div class="modal-dots" id="guideDots"></div>
+      <div class="modal-nav">
+        <button class="btn btn-clear" id="guideBack">← Kembali</button>
+        <button class="btn btn-primary" id="guideNext">Lanjut →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Instruksi misi -->
+<div class="modal-overlay" id="modalInfo">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="mission-badge" id="infoBadge">Misi</div>
+      <h2 id="infoTitle" style="text-align:left;">Judul Misi</h2>
+      <div class="txt" id="infoBody">Deskripsi</div>
+      <div class="mission-hint" id="infoHint" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-block" id="infoStart">Ayo Mulai! 👍</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Hasil / feedback -->
+<div class="modal-overlay" id="modalResult">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="modal-icon" id="resultIcon">🎉</div>
+      <h2 id="resultTitle">Judul</h2>
+      <div class="txt" id="resultBody" style="text-align:center;">Pesan</div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-nav">
+        <button class="btn btn-clear" id="resultSecondary" style="display:none;">Coba Lagi</button>
+        <button class="btn btn-primary" id="resultAction">Lanjut</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ======================================================================
+   Algebra Tiles : UBIN ALJABAR
+   Media pembelajaran interaktif ubin aljabar (algebra tiles)
+   Metode CRA (Konkret - Representasional - Abstrak)
+   ====================================================================== */
+
+/* ---------------------------------------------------------------------
+   UTILITAS UMUM
+--------------------------------------------------------------------- */
+let _uidc = 1;
+function uid(){ return 'id' + (_uidc++); }
+
+function tileLabel(type, sign){
+  if(type==='x2') return sign>0 ? 'x²' : '-x²';
+  if(type==='x')  return sign>0 ? 'x'  : '-x';
+  return sign>0 ? '+1' : '-1';
+}
+
+function makeTileEl(type, sign, {sz='board', horiz=false, cls='', locked=false} = {}){
+  const div = document.createElement('div');
+  div.className = `tile ${sign>0?'pos':'neg'} sz-${sz} t-${type} ${horiz?'horiz':''} ${cls}`.trim();
+  if(locked) div.classList.add('locked');
+  div.textContent = tileLabel(type, sign);
+  return div;
+}
+
+// c = {x2,x,unit} -> "2x² - 3x + 4"
+function formatExpr(c){
+  const defs = [[c.x2||0,'x²'], [c.x||0,'x'], [c.unit||0,'']];
+  let out = '';
+  defs.forEach(([val,label])=>{
+    if(val===0) return;
+    const abs = Math.abs(val);
+    const num = label ? (abs===1?'':String(abs)) : String(abs);
+    const term = `${num}${label}`;
+    if(out===''){ out = (val<0?'-':'') + term; }
+    else{ out += (val<0?' - ':' + ') + term; }
+  });
+  return out || '0';
+}
+
+function compileTiles(arr){
+  const c = {x2:0,x:0,unit:0};
+  arr.forEach(t=>{ c[t.type] += t.sign; });
+  return c;
+}
+
+// Hitung ubin per-jenis & per-tanda secara terpisah (untuk validasi langkah demi langkah)
+function countTilesDetailed(arr){
+  const c = {xPos:0,xNeg:0,unitPos:0,unitNeg:0};
+  arr.forEach(t=>{
+    if(t.type==='x'){ if(t.sign>0) c.xPos++; else c.xNeg++; }
+    else if(t.type==='unit'){ if(t.sign>0) c.unitPos++; else c.unitNeg++; }
+  });
+  return c;
+}
+
+function toast(msg, ms=2200){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=> el.classList.remove('show'), ms);
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+/* ---------------------------------------------------------------------
+   MODAL HELPERS
+--------------------------------------------------------------------- */
+function openModal(id){ document.getElementById(id).classList.add('active'); }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+/* ---------------------------------------------------------------------
+   DRAG & DROP: memindahkan ubin dari Bank Ubin ke area kerja
+   (Pakai Pointer Events agar berfungsi di mouse maupun layar sentuh)
+--------------------------------------------------------------------- */
+let dragInfo = null;      // {type, sign}
+let dragGhostEl = null;
+let dragSourceEl = null;
+let dragHoverZone = null;
+
+function enableBankDrag(slotEl, type, sign){
+  slotEl.addEventListener('pointerdown', (e)=>{
+    if(e.pointerType==='mouse' && e.button !== 0) return;
+    e.preventDefault();
+    beginDrag(e, type, sign, slotEl);
+  });
+}
+
+function beginDrag(e, type, sign, sourceEl){
+  dragInfo = {type, sign};
+  dragSourceEl = sourceEl;
+  sourceEl.classList.add('selected');
+
+  dragGhostEl = makeTileEl(type, sign, {sz:'board'});
+  dragGhostEl.classList.add('drag-ghost');
+  document.body.appendChild(dragGhostEl);
+  moveGhost(e.clientX, e.clientY);
+
+  document.querySelectorAll('.dropzone').forEach(z=> z.classList.add('dropzone-active'));
+
+  const onMove = (ev)=>{ moveGhost(ev.clientX, ev.clientY); hoverAt(ev.clientX, ev.clientY); };
+  const onUp = (ev)=>{
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onCancel);
+    dropAt(ev.clientX, ev.clientY);
+  };
+  const onCancel = ()=>{
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onCancel);
+    cancelDrag();
+  };
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+  document.addEventListener('pointercancel', onCancel);
+}
+
+function moveGhost(x, y){
+  if(dragGhostEl){ dragGhostEl.style.left = x+'px'; dragGhostEl.style.top = y+'px'; }
+}
+
+function hoverAt(x, y){
+  const el = document.elementFromPoint(x, y);
+  const zone = el ? el.closest('.dropzone') : null;
+  if(zone !== dragHoverZone){
+    if(dragHoverZone) dragHoverZone.classList.remove('dropzone-hover');
+    dragHoverZone = zone;
+    if(dragHoverZone) dragHoverZone.classList.add('dropzone-hover');
+  }
+}
+
+function endDragVisuals(){
+  document.querySelectorAll('.dropzone').forEach(z=> z.classList.remove('dropzone-active','dropzone-hover'));
+  if(dragSourceEl) dragSourceEl.classList.remove('selected');
+  if(dragGhostEl){ dragGhostEl.remove(); dragGhostEl = null; }
+  dragHoverZone = null; dragSourceEl = null;
+}
+
+function dropAt(x, y){
+  const el = document.elementFromPoint(x, y);
+  const zone = el ? el.closest('.dropzone') : null;
+  const info = dragInfo;
+  endDragVisuals();
+  dragInfo = null;
+  if(zone && zone._onDrop && info){
+    zone._onDrop(info.type, info.sign);
+  } else if(info){
+    toast('Seret ubin ke area kerja untuk menaruhnya 👆');
+  }
+}
+
+function cancelDrag(){
+  endDragVisuals();
+  dragInfo = null;
+}
+
+function showResultModal({icon='🎉', title, body, actionText='Lanjut', action, secondaryText, secondaryAction}){
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultBody').innerHTML = body;
+  const actBtn = document.getElementById('resultAction');
+  actBtn.textContent = actionText;
+  actBtn.onclick = ()=>{ closeModal('modalResult'); if(action) action(); };
+  const secBtn = document.getElementById('resultSecondary');
+  if(secondaryText){
+    secBtn.style.display='inline-block'; secBtn.textContent = secondaryText;
+    secBtn.onclick = ()=>{ closeModal('modalResult'); if(secondaryAction) secondaryAction(); };
+  } else { secBtn.style.display='none'; }
+  openModal('modalResult');
+}
+
+function showInfoModal(lvl){
+  document.getElementById('infoBadge').textContent = lvl.badge || 'Misi';
+  document.getElementById('infoTitle').textContent = lvl.title;
+  document.getElementById('infoBody').innerHTML = lvl.desc;
+  const hint = document.getElementById('infoHint');
+  if(lvl.hint){ hint.style.display='block'; hint.innerHTML = '💡 <b>Petunjuk:</b> ' + lvl.hint; }
+  else{ hint.style.display='none'; }
+  openModal('modalInfo');
+}
+
+/* ---------------------------------------------------------------------
+   DATA KURIKULUM (9 MODUL BERURUTAN)
+--------------------------------------------------------------------- */
+const MODULES = [
+  {
+    id:'kenalan', icon:'🧩', kind:'freeboard',
+    title:'Mengenal Ubin Aljabar',
+    shortDesc:'Kenali bentuk & makna setiap ubin: satuan, x, dan x².',
+    progressLevel:0, completed:false,
+    levels:[
+      { badge:'Tutorial', title:'Ubin Satuan (+1)',
+        desc:`Ubin persegi kecil berwarna <b>hijau</b> mewakili nilai <b>+1</b> (konstanta positif). Ukurannya 1×1.<br><br><b>Misi:</b> Seret ubin <b>+1</b> dari Bank Ubin ke area kerja sebanyak <b>3 kali</b> untuk membentuk nilai <b>3</b>.`,
+        allowNeg:false, allowSimplify:false, allowTypes:['unit'], target:{x2:0,x:0,unit:3} },
+      { badge:'Tutorial', title:'Ubin Variabel (x)',
+        desc:`Ubin persegi panjang mewakili suku <b>x</b> (variabel, panjangnya belum diketahui pastinya).<br><br><b>Misi:</b> Susun <b>2 ubin x</b> dan <b>1 ubin +1</b> untuk membentuk bentuk aljabar <b>2x + 1</b>.`,
+        allowNeg:false, allowSimplify:false, allowTypes:['x','unit'], target:{x2:0,x:2,unit:1} },
+      { badge:'Tutorial', title:'Ubin Kuadrat (x²)',
+        desc:`Ubin persegi besar mewakili suku <b>x²</b> (x dikali x). Ini yang terbesar karena luasnya x × x.<br><br><b>Misi:</b> Susun bentuk aljabar <b>x² + 2x + 3</b>.`,
+        allowNeg:false, allowSimplify:false, allowTypes:['x2','x','unit'], target:{x2:1,x:2,unit:3} },
+      { badge:'Latihan', title:'Warna Ubin: Positif & Negatif',
+        desc:`Setiap ubin punya <b>dua warna</b>: <span style="color:#2F9E68;font-weight:800;">hijau = positif</span> dan <span style="color:#E23E57;font-weight:800;">merah = negatif</span>. Bentuk & ukuran menentukan jenisnya (satuan / x / x²), sedangkan warna menentukan tandanya.<br><br><b>Misi:</b> Susun bentuk <b>x² - 2x + 1</b> menggunakan ubin merah untuk suku negatif.`,
+        allowNeg:true, allowSimplify:false, allowTypes:['x2','x','unit'], target:{x2:1,x:-2,unit:1} },
+    ]
+  },
+  {
+    id:'bilangan-bulat', icon:'➕', kind:'freeboard',
+    title:'Bilangan Bulat & Pasangan Nol',
+    shortDesc:'Memahami penjumlahan/pengurangan bilangan bulat lewat pasangan nol.',
+    progressLevel:0, completed:false,
+    levels:[
+      { badge:'Konsep', title:'Pasangan Nol (Zero Pair)',
+        desc:`Satu ubin <b>+1</b> (hijau) dan satu ubin <b>-1</b> (merah) jika digabungkan akan saling meniadakan, hasilnya <b>0</b>. Inilah yang disebut <b>pasangan nol</b>.<br><br><b>Misi:</b> Susun <b>4 ubin +1</b> dan <b>4 ubin -1</b>, lalu tekan tombol <b>"Hilangkan Pasangan Nol"</b> untuk membuktikan bahwa 4 + (-4) = 0.`,
+        hint:'Seret ubin +1 ke area kerja sebanyak 4 kali, ulangi untuk ubin -1.',
+        allowNeg:true, allowSimplify:true, requireSimplifyClick:true, allowTypes:['unit'],
+        target:{x2:0,x:0,unit:0} },
+      { badge:'Latihan', title:'Menghitung 5 + (-2)',
+        desc:`Bilangan negatif bisa dijumlahkan dengan mencari pasangan nol.<br><br><b>Misi:</b> Susun <b>5 ubin +1</b> dan <b>2 ubin -1</b> untuk mewakili <b>5 + (-2)</b>, lalu hilangkan pasangan nolnya untuk menemukan hasil akhirnya.`,
+        hint:'Setelah 2 pasang hilang, sisa ubin +1 adalah hasilnya.',
+        allowNeg:true, allowSimplify:true, requireSimplifyClick:true, allowTypes:['unit'],
+        target:{x2:0,x:0,unit:3} },
+      { badge:'Tantangan', title:'Menghitung -3 + 7',
+        desc:`Sekarang coba bentuk yang lebih menantang.<br><br><b>Misi:</b> Susun ubin yang mewakili <b>-3 + 7</b>, lalu sederhanakan dengan menghilangkan pasangan nol untuk menemukan hasilnya.`,
+        hint:'-3 artinya 3 ubin merah (-1). 7 artinya 7 ubin hijau (+1).',
+        allowNeg:true, allowSimplify:true, requireSimplifyClick:true, allowTypes:['unit'],
+        target:{x2:0,x:0,unit:4} },
+    ]
+  },
+  {
+    id:'suku-sejenis', icon:'🗂️', kind:'freeboard',
+    title:'Suku Sejenis (Like Terms)',
+    shortDesc:'Mengelompokkan ubin berbentuk & berukuran sama.',
+    progressLevel:0, completed:false,
+    levels:[
+      { badge:'Konsep', title:'Mengelompokkan Ubin Sejenis',
+        desc:`<b>Suku sejenis</b> adalah ubin dengan bentuk & ukuran yang sama (misalnya sesama ubin x, atau sesama ubin x²).<br><br><b>Misi:</b> Susun ubin secara acak untuk membentuk <b>2x² + 3x + 4</b>, lalu tekan tombol <b>"Kelompokkan"</b> untuk melihat ubin-ubin sejenis berkumpul rapi.`,
+        allowNeg:false, allowSimplify:false, allowGroup:true, allowTypes:['x2','x','unit'],
+        target:{x2:2,x:3,unit:4} },
+      { badge:'Latihan', title:'Menyederhanakan Suku Sejenis Bertanda',
+        desc:`Suku sejenis yang berlawanan tanda bisa saling meniadakan (pasangan nol), sisanya digabung jadi satu suku.<br><br><b>Misi:</b> Susun <b>1 ubin x²</b>, <b>4 ubin x</b> positif, <b>2 ubin x</b> negatif, dan <b>2 ubin +1</b>. Kelompokkan, lalu hilangkan pasangan nol pada ubin x untuk menyederhanakannya menjadi <b>x² + 2x + 2</b>.`,
+        hint:'4 ubin x positif dan 2 ubin x negatif akan menyisakan 2 ubin x positif.',
+        allowNeg:true, allowSimplify:true, allowGroup:true, requireSimplifyClick:true, allowTypes:['x2','x','unit'],
+        target:{x2:1,x:2,unit:2} },
+    ]
+  },
+  {
+    id:'polinomial', icon:'📐', kind:'freeboard',
+    title:'Penjumlahan & Pengurangan Bentuk Aljabar',
+    shortDesc:'Menjumlah dan mengurangi bentuk aljabar dengan ubin.',
+    progressLevel:0, completed:false,
+    levels:[
+      { badge:'Latihan', title:'(2x + 3) + (x - 1)',
+        desc:`Untuk <b>menjumlahkan</b> dua bentuk aljabar, cukup gabungkan semua ubinnya lalu sederhanakan.<br><br><b>Misi:</b> Susun ubin untuk <b>(2x + 3)</b> dan <b>(x - 1)</b> sekaligus di papan yang sama, lalu hilangkan pasangan nol untuk menemukan hasil akhirnya.`,
+        hint:'Total ada 3 ubin x positif. Ubin +1 dan -1 akan saling meniadakan sebagian.',
+        allowNeg:true, allowSimplify:true, allowGroup:true, requireSimplifyClick:true, allowTypes:['x','unit'],
+        target:{x2:0,x:3,unit:2} },
+      { badge:'Tantangan', title:'(3x - 2) - (x - 5)',
+        desc:`Untuk <b>mengurangkan</b> bentuk aljabar, ingat aturan: <b>kurangi = tambah lawannya</b>. Jadi <b>-(x - 5)</b> sama dengan menambahkan <b>-x + 5</b>.<br><br><b>Misi:</b> Susun ubin untuk <b>(3x - 2)</b>, kemudian tambahkan ubin <b>lawan</b> dari <b>(x - 5)</b> yaitu <b>-x</b> dan <b>+5</b>. Sederhanakan untuk menemukan hasilnya.`,
+        hint:'Lawan dari (x - 5) adalah (-x + 5). Total ada 2 ubin x dan sisa +1 setelah pasangan nol hilang.',
+        allowNeg:true, allowSimplify:true, allowGroup:true, requireSimplifyClick:true, allowTypes:['x','unit'],
+        target:{x2:0,x:2,unit:3} },
+    ]
+  },
+  {
+    id:'perkalian', icon:'📏', kind:'area', mode:'build',
+    title:'Perkalian Aljabar (Model Luas)',
+    shortDesc:'Mengalikan dua faktor menggunakan luas persegi panjang.',
+    progressLevel:0, completed:false,
+    levels:[
+      { badge:'Tutorial', title:'(x + 2)(x + 1)',
+        desc:`Model Luas menjadikan setiap faktor sebagai <b>panjang</b> (atas) dan <b>lebar</b> (kiri) dari sebuah persegi panjang, lalu bagian dalamnya diisi hasil kali.<br><br><b>Misi:</b> Susun <b>1 ubin x + 1 ubin +1</b> di sisi <b>atas</b>, dan <b>1 ubin x + 2 ubin +1</b> di sisi <b>kiri</b>. Lalu isi kotak-kotak di tengah sesuai hasil kali baris & kolomnya.`,
+        hint:'x × x = x², x × 1 = x, 1 × 1 = 1.',
+        targetTop:{x:1,unit:1}, targetLeft:{x:1,unit:2} },
+      { badge:'Latihan', title:'(x + 3)(x - 1) — Hukum Tanda',
+        desc:`Ingat aturan tanda: (+)×(+)=+, (+)×(-)=-, (-)×(-)=+.<br><br><b>Misi:</b> Susun faktor <b>(x + 3)</b> dan <b>(x - 1)</b> di tepi, lalu isi area hasil kali dengan memperhatikan tanda tiap ubin.`,
+        hint:'Kolom bertanda negatif akan menghasilkan ubin merah saat dikalikan dengan baris positif.',
+        targetTop:{x:1,unit:-1}, targetLeft:{x:1,unit:3} },
+    ]
+  },
+  {
+    id:'faktorisasi', icon:'🔍', kind:'area', mode:'factor',
+    title:'Faktorisasi Bentuk Kuadrat',
+    shortDesc:'Membalik proses perkalian untuk menemukan faktor.',
+    progressLevel:0, completed:false,
+    levels:[
+      { badge:'Latihan', title:'Faktorkan x² + 5x + 6',
+        desc:`Sekarang proses dibalik! Kamu diberi <b>hasil kali</b> (produk), tugasmu menemukan <b>faktor</b>-nya.<br><br><b>Misi:</b> Coba beberapa kombinasi ubin <b>x</b> dan <b>+1</b> di sisi atas & kiri sehingga saat area tengah diisi penuh, totalnya sama dengan <b>x² + 5x + 6</b>.`,
+        hint:'Cari dua bilangan yang jika dijumlah = 5 dan jika dikali = 6.',
+        targetProduct:{x2:1,x:5,unit:6} },
+      { badge:'Tantangan', title:'Faktorkan x² - x - 2',
+        desc:`Kali ini ada suku negatif. Gunakan hukum tanda untuk menentukan kombinasi faktor yang tepat.<br><br><b>Misi:</b> Temukan faktor dari <b>x² - x - 2</b> dengan menyusun ubin di sisi atas & kiri, lalu isi area tengah.`,
+        hint:'Cari dua bilangan yang jika dijumlah = -1 dan jika dikali = -2.',
+        targetProduct:{x2:1,x:-1,unit:-2} },
+    ]
+  },
+  {
+    id:'plsv', icon:'⚖️', kind:'scale',
+    title:'Persamaan Linear (Timbangan)',
+    shortDesc:'Menyelesaikan PLSV dengan menjaga keseimbangan timbangan.',
+    progressLevel:0, completed:false,
+    levels:[
+      { badge:'Tutorial', title:'2x + 3 = 7', eq:'2x + 3 = 7', answer:2,
+        desc:`Bayangkan persamaan sebagai <b>timbangan</b> yang harus selalu seimbang. Apapun yang kamu lakukan di satu sisi, harus dilakukan juga di sisi lain.`,
+        hint:'Tambahkan 3 ubin -1 ke kiri dan ke kanan, hilangkan pasangan nol di kiri, lalu tekan "Bagi Rata".',
+        initial:{ left:[{type:'x',sign:1},{type:'x',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1}],
+                  right:[{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1}] },
+        steps:[
+          { action:'check',
+            desc:`<b>Langkah 1 — Amati Timbangan:</b><br>Timbangan sudah berisi <b>2x + 3</b> di sisi kiri dan <b>7</b> di sisi kanan. Sisi kiri masih punya <b>+3</b> yang harus dihilangkan agar tersisa ubin <b>x</b> saja.<br><br>Tarik <b>3 ubin -1</b> ke <u>sisi kiri</u> dan <b>3 ubin -1</b> ke <u>sisi kanan</u> juga, lalu tekan "Cek Langkah".`,
+            hint:'Ambil ubin -1 dari Bank Ubin, seret 3 buah ke kiri dan 3 buah ke kanan.',
+            target:{ left:{xPos:2,xNeg:0,unitPos:3,unitNeg:3}, right:{xPos:0,xNeg:0,unitPos:7,unitNeg:3} } },
+          { action:'zero',
+            desc:`<b>Langkah 2 — Buang Pasangan Nol:</b><br>Di sisi kiri sekarang ada ubin <b>+1</b> dan <b>-1</b> yang berdampingan. Jika digabung, keduanya menjadi <b>nol</b>.<br><br>Tekan tombol "Hilangkan Pasangan Nol" untuk membersihkannya secara otomatis.`,
+            hint:'Pasangan +1 dan -1 saling meniadakan.' },
+          { action:'divide',
+            desc:`<b>Langkah 3 — Bagi Rata:</b><br>Sisi kiri kini tersisa ubin <b>x</b> saja, sisi kanan tersisa ubin satuan. Bagikan jumlah ubin di kanan secara adil ke setiap ubin x untuk menemukan nilai <b>x</b>.<br><br>Tekan tombol "Bagi Rata".`,
+            hint:'Berapa ubin x di kiri? Bagi jumlah unit di kanan dengan angka itu.' },
+        ] },
+      { badge:'Latihan', title:'3x - 2 = 7', eq:'3x - 2 = 7', answer:3,
+        desc:`Sekarang ada suku negatif di kiri. Ikuti langkah demi langkah untuk menyeimbangkan timbangan.`,
+        hint:'Tambahkan 2 ubin +1 ke kiri dan ke kanan.',
+        initial:{ left:[{type:'x',sign:1},{type:'x',sign:1},{type:'x',sign:1},{type:'unit',sign:-1},{type:'unit',sign:-1}],
+                  right:[{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1},{type:'unit',sign:1}] },
+        steps:[
+          { action:'check',
+            desc:`<b>Langkah 1 — Amati Timbangan:</b><br>Timbangan berisi <b>3x - 2</b> di kiri dan <b>7</b> di kanan. Sisi kiri punya <b>-2</b> yang harus dihilangkan.<br><br>Tarik <b>2 ubin +1</b> ke <u>sisi kiri</u> dan <b>2 ubin +1</b> ke <u>sisi kanan</u> juga, lalu tekan "Cek Langkah".`,
+            hint:'Ambil ubin +1 dari Bank Ubin, seret 2 buah ke kiri dan 2 buah ke kanan.',
+            target:{ left:{xPos:3,xNeg:0,unitPos:2,unitNeg:2}, right:{xPos:0,xNeg:0,unitPos:9,unitNeg:0} } },
+          { action:'zero',
+            desc:`<b>Langkah 2 — Buang Pasangan Nol:</b><br>Bersihkan pasangan <b>+1</b> dan <b>-1</b> yang berdampingan di sisi kiri.<br><br>Tekan tombol "Hilangkan Pasangan Nol".`,
+            hint:'Pasangan +1 dan -1 saling meniadakan.' },
+          { action:'divide',
+            desc:`<b>Langkah 3 — Bagi Rata:</b><br>Bagikan unit di kanan secara adil ke setiap ubin x di kiri untuk menemukan nilai <b>x</b>.<br><br>Tekan tombol "Bagi Rata".`,
+            hint:'Berapa ubin x di kiri? Bagi jumlah unit di kanan dengan angka itu.' },
+        ] },
+      { badge:'Tantangan', title:'2x + 1 = -3', eq:'2x + 1 = -3', answer:-2,
+        desc:`Kali ini sisi kanan bernilai negatif. Ikuti langkah demi langkah, hasil akhirnya adalah nilai x negatif.`,
+        hint:'Tambahkan 1 ubin -1 ke kedua sisi untuk menghilangkan +1 di kiri.',
+        initial:{ left:[{type:'x',sign:1},{type:'x',sign:1},{type:'unit',sign:1}],
+                  right:[{type:'unit',sign:-1},{type:'unit',sign:-1},{type:'unit',sign:-1}] },
+        steps:[
+          { action:'check',
+            desc:`<b>Langkah 1 — Amati Timbangan:</b><br>Timbangan berisi <b>2x + 1</b> di kiri dan <b>-3</b> di kanan. Sisi kiri punya <b>+1</b> yang harus dihilangkan.<br><br>Tarik <b>1 ubin -1</b> ke <u>sisi kiri</u> dan <b>1 ubin -1</b> ke <u>sisi kanan</u> juga, lalu tekan "Cek Langkah".`,
+            hint:'Ambil ubin -1 dari Bank Ubin, seret 1 buah ke kiri dan 1 buah ke kanan.',
+            target:{ left:{xPos:2,xNeg:0,unitPos:1,unitNeg:1}, right:{xPos:0,xNeg:0,unitPos:0,unitNeg:4} } },
+          { action:'zero',
+            desc:`<b>Langkah 2 — Buang Pasangan Nol:</b><br>Bersihkan pasangan <b>+1</b> dan <b>-1</b> yang berdampingan di sisi kiri.<br><br>Tekan tombol "Hilangkan Pasangan Nol".`,
+            hint:'Pasangan +1 dan -1 saling meniadakan.' },
+          { action:'divide',
+            desc:`<b>Langkah 3 — Bagi Rata:</b><br>Bagikan ubin negatif di kanan secara adil ke setiap ubin x di kiri untuk menemukan nilai <b>x</b> (hasilnya negatif).<br><br>Tekan tombol "Bagi Rata".`,
+            hint:'Berapa ubin x di kiri? Bagi jumlah unit di kanan (negatif) dengan angka itu.' },
+        ] },
+    ]
+  },
+  {
+    id:'kuadrat', icon:'🟦', kind:'square',
+    title:'Melengkapi Kuadrat Sempurna',
+    shortDesc:'Menata ubin secara simetris untuk membentuk persegi utuh.',
+    progressLevel:0, completed:false,
+    levels:[
+      { badge:'Tutorial', title:'Lengkapi x² + 4x', b:4, n:2,
+        desc:`Ubin <b>x²</b> sudah tersedia di pojok kiri atas. Bagi ubin <b>x</b> secara <b>simetris</b> ke kanan dan bawah, lalu lihat berapa ubin satuan yang dibutuhkan untuk melengkapi pojok kanan-bawah menjadi persegi utuh.<br><br><b>Misi:</b> Bagi <b>4 ubin x</b> menjadi 2 di kanan & 2 di bawah, lalu isi kotak pojok dengan ubin satuan sampai penuh.`,
+        hint:'Jika sisi kanan & bawah masing-masing berisi 2 ubin x, pojoknya berukuran 2×2 = 4 ubin satuan.' },
+      { badge:'Latihan', title:'Lengkapi x² + 6x', b:6, n:3,
+        desc:`<b>Misi:</b> Bagi <b>6 ubin x</b> secara simetris (3 di kanan, 3 di bawah), lalu lengkapi pojok kanan-bawah dengan ubin satuan.`,
+        hint:'3 × 3 = 9 ubin satuan dibutuhkan.' },
+      { badge:'Tantangan', title:'Lengkapi x² + 8x', b:8, n:4,
+        desc:`<b>Misi:</b> Bagi <b>8 ubin x</b> secara simetris, lalu lengkapi pojok kanan-bawah agar seluruh bentuk menjadi persegi sempurna.`,
+        hint:'Berapa ubin satuan yang dibutuhkan jika sisinya masing-masing 4 ubin x?' },
+    ]
+  },
+  {
+    id:'evaluasi', icon:'🏆', kind:'quiz',
+    title:'Evaluasi Akhir',
+    shortDesc:'Uji pemahamanmu tentang semua konsep ubin aljabar.',
+    progressLevel:0, completed:false,
+    levels:[{ badge:'Evaluasi', title:'Kuis Akhir Algebra Tiles',
+      desc:'Jawablah semua soal berikut untuk menguji pemahamanmu tentang ubin aljabar dari awal sampai akhir.' }],
+    questions:[
+      { q:'Ubin persegi besar (x × x) mewakili suku apa?', opts:['x','x²','1','2x'], correct:1,
+        exp:'Ubin persegi besar mewakili x² karena luasnya adalah sisi x dikalikan sisi x.' },
+      { q:'Apa yang terjadi jika 1 ubin +1 (hijau) digabung dengan 1 ubin -1 (merah)?', opts:['Menjadi +2','Menjadi -2','Saling meniadakan (menjadi 0)','Menjadi x'], correct:2,
+        exp:'Ini disebut pasangan nol: +1 dan -1 saling meniadakan sehingga hasilnya 0.' },
+      { q:'Hasil dari 5 + (-3) menggunakan ubin adalah...', opts:['8','2','-2','-8'], correct:1,
+        exp:'5 ubin +1 bertemu 3 ubin -1, 3 pasang saling hilang, sisa 2 ubin +1.' },
+      { q:'Manakah yang termasuk "suku sejenis" dengan 3x?', opts:['3x²','5x','7','x²+x'], correct:1,
+        exp:'Suku sejenis harus memiliki bentuk & ukuran ubin yang sama; 5x sama-sama berbentuk ubin x.' },
+      { q:'Dalam Model Luas, hasil kali ubin x (baris) dengan ubin x (kolom) adalah...', opts:['x','x²','1','2x'], correct:1,
+        exp:'x × x = x², sesuai konsep luas persegi panjang.' },
+      { q:'Faktor dari x² + 5x + 6 adalah...', opts:['(x+2)(x+3)','(x+1)(x+6)','(x-2)(x-3)','(x+5)(x+1)'], correct:0,
+        exp:'2 + 3 = 5 dan 2 × 3 = 6, sehingga faktornya adalah (x+2)(x+3).' },
+      { q:'Pada persamaan 2x + 3 = 7, agar seimbang, jika sisi kiri dikurangi 3, maka sisi kanan harus...', opts:['Tetap 7','Dikurangi 3 juga','Dikali 2','Ditambah 3'], correct:1,
+        exp:'Timbangan harus tetap seimbang, jadi operasi yang sama harus dilakukan di kedua sisi.' },
+      { q:'Untuk melengkapi kuadrat sempurna dari x² + 6x, berapa ubin satuan yang perlu ditambahkan?', opts:['3','6','9','12'], correct:2,
+        exp:'6 dibagi 2 = 3, lalu 3 × 3 = 9 ubin satuan dibutuhkan agar menjadi (x+3)².' },
+    ]
+  },
+];
+
+/* ---------------------------------------------------------------------
+   STATE NAVIGASI GLOBAL
+--------------------------------------------------------------------- */
+let currentModuleId = null;
+let selectedTile = null; // {type,sign}
+let appMode = null; // 'sequential' | 'explore'
+
+function currentModule(){ return MODULES.find(m=>m.id===currentModuleId); }
+function isUnlocked(m){
+  if(appMode==='explore') return true;
+  const idx = MODULES.indexOf(m);
+  if(idx===0) return true;
+  return MODULES[idx-1].completed;
+}
+
+function overallProgressPct(){
+  const done = MODULES.filter(m=>m.completed).length;
+  return Math.round((done / MODULES.length) * 100);
+}
+
+/* ---------------------------------------------------------------------
+   HOME SCREEN
+--------------------------------------------------------------------- */
+function renderHome(){
+  const wrap = document.getElementById('homeWrap');
+  const pct = overallProgressPct();
+  const anyDone = MODULES.some(m=>m.completed);
+
+  let html = `
+    <div class="hero">
+      <h1>🧩 Algebra Tiles: Ubin Aljabar</h1>
+      <p>Belajar konsep aljabar secara <b>konkret</b> lewat ubin, lalu bertahap menuju <b>gambar</b> dan <b>simbol abstrak</b> — dengan cara yang menyenangkan seperti bermain!</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="btnStart">${anyDone? 'Lanjutkan Belajar ▶️' : 'Mulai Belajar 🚀'}</button>
+        <button class="btn btn-ghost" id="btnGuideHome">📖 Cara Bermain</button>
+        <button class="btn btn-ghost" id="btnChangeMode">🔀 Ubah Mode</button>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:.78rem;color:var(--ink-soft);margin-top:6px;font-weight:700;">Progres belajar: ${pct}% &nbsp;•&nbsp; Mode: <b>${appMode==='explore'?'Eksplorasi 🗺️':'Berurutan 🔒'}</b></div>
+      <div class="legend-row">
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--pos);"></span> Positif</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--neg);"></span> Negatif</div>
+        <div class="legend-item">▮ = 1 &nbsp; ▯ = x &nbsp; ⬛ = x²</div>
+      </div>
+    </div>
+    <div class="path" id="pathList"></div>
+  `;
+  wrap.innerHTML = html;
+
+  const list = document.getElementById('pathList');
+  MODULES.forEach((m, i)=>{
+    const unlocked = isUnlocked(m);
+    const status = m.completed ? 'done' : (unlocked ? 'unlocked' : 'locked');
+    const node = document.createElement('div');
+    node.className = `node ${status}`;
+    node.innerHTML = `
+      <div class="node-badge">${m.completed? '✅' : m.icon}</div>
+      <div class="node-card">
+        <div class="node-title">${i+1}. ${m.title}</div>
+        <div class="node-desc">${m.shortDesc}</div>
+        <span class="node-status ${status}">${status==='done'?'Selesai':status==='unlocked'?'Terbuka':'Terkunci'}</span>
+      </div>
+    `;
+    node.addEventListener('click', ()=>{
+      if(!unlocked){ toast('🔒 Selesaikan modul sebelumnya dulu, ya!'); return; }
+      openModule(m.id);
+    });
+    list.appendChild(node);
+  });
+
+  document.getElementById('btnStart').addEventListener('click', ()=>{
+    const next = MODULES.find(m=>!m.completed) || MODULES[0];
+    openModule(next.id);
+  });
+  document.getElementById('btnGuideHome').addEventListener('click', ()=> openGuide());
+  document.getElementById('btnChangeMode').addEventListener('click', ()=> showModeSelect());
+}
+
+/* ---------------------------------------------------------------------
+   MODE SELECT SCREEN (Berurutan vs Eksplorasi)
+--------------------------------------------------------------------- */
+function showModeSelect(){
+  renderModeSelect();
+  showScreen('screen-mode');
+}
+function renderModeSelect(){
+  const wrap = document.getElementById('modeWrap');
+  wrap.innerHTML = `
+    <div class="hero">
+      <h1>🧩 Selamat Datang di Algebra Tiles!</h1>
+      <p>Sebelum mulai, pilih dulu cara kamu ingin belajar. Kamu bisa mengganti mode ini kapan saja lewat tombol <b>🔀 Ubah Mode</b> di Beranda.</p>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card" id="modeCardSequential">
+        <div class="mode-icon">🧗</div>
+        <h3>Mode Berurutan</h3>
+        <p>Modul terbuka satu per satu, setelah kamu menyelesaikan modul sebelumnya. Cocok untuk belajar bertahap mengikuti alur kurikulum dari dasar hingga mahir.</p>
+        <span class="mode-tag">${appMode==='sequential' ? 'Sedang Dipakai' : 'Direkomendasikan'}</span>
+      </div>
+      <div class="mode-card" id="modeCardExplore">
+        <div class="mode-icon">🗺️</div>
+        <h3>Mode Eksplorasi</h3>
+        <p>Semua modul langsung terbuka dan bisa diakses bebas sesuai keinginanmu, tanpa harus menyelesaikan modul lain terlebih dahulu. Cocok untuk mengulang atau menjelajahi topik tertentu.</p>
+        <span class="mode-tag">${appMode==='explore' ? 'Sedang Dipakai' : 'Bebas Akses'}</span>
+      </div>
+    </div>
+  `;
+  document.getElementById('modeCardSequential').addEventListener('click', ()=> selectMode('sequential'));
+  document.getElementById('modeCardExplore').addEventListener('click', ()=> selectMode('explore'));
+}
+function selectMode(mode){
+  const isFirstTime = appMode===null;
+  appMode = mode;
+  toast(mode==='explore' ? '🗺️ Mode Eksplorasi aktif — semua modul terbuka!' : '🧗 Mode Berurutan aktif.');
+  goHome();
+  if(isFirstTime) setTimeout(openGuide, 350);
+}
+
+/* ---------------------------------------------------------------------
+   SCREEN NAVIGATION
+--------------------------------------------------------------------- */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome(){
+  currentModuleId = null;
+  document.getElementById('brandText').innerHTML = 'Algebra Tiles <small>Ubin Aljabar</small>';
+  document.getElementById('levelPill').style.display = 'none';
+  document.getElementById('btnMissionMobile').style.display = 'none';
+  renderHome();
+  showScreen('screen-home');
+}
+
+function openModule(id){
+  currentModuleId = id;
+  const m = currentModule();
+  document.getElementById('brandText').innerHTML = `${m.icon} <small>${m.title}</small>`;
+  document.getElementById('levelPill').style.display = 'inline-block';
+  document.getElementById('btnMissionMobile').style.display = (m.kind==='quiz') ? 'none' : 'flex';
+  showScreen('screen-module');
+  loadLevel();
+}
+
+function loadLevel(){
+  const m = currentModule();
+  const bankPanel = document.getElementById('bankPanel');
+  bankPanel.style.display = (m.kind==='quiz') ? 'none' : 'flex';
+
+  if(m.kind==='quiz'){
+    document.getElementById('levelPill').textContent = 'Evaluasi';
+    QuizEngine.start(m);
+    return;
+  }
+
+  const lvl = m.levels[m.progressLevel];
+  document.getElementById('levelPill').textContent = `Level ${m.progressLevel+1} / ${m.levels.length}`;
+
+  if(m.kind==='freeboard') FreeboardEngine.start(m, lvl);
+  else if(m.kind==='area') AreaEngine.start(m, lvl);
+  else if(m.kind==='scale') ScaleEngine.start(m, lvl);
+  else if(m.kind==='square') SquareEngine.start(m, lvl);
+
+  showInfoModal(lvl);
+}
+
+function nextLevelOrComplete(m){
+  if(m.progressLevel < m.levels.length - 1){
+    m.progressLevel++;
+    loadLevel();
+  } else {
+    m.completed = true;
+    const idx = MODULES.indexOf(m);
+    const isLast = idx === MODULES.length - 1;
+    showResultModal({
+      icon:'🏅', title:'Modul Selesai!',
+      body:`Kerja bagus! Kamu telah menyelesaikan modul <b>${m.title}</b>.` + (isLast? '' : ' Modul berikutnya kini terbuka.'),
+      actionText: isLast ? 'Kembali ke Peta Belajar' : 'Ke Peta Belajar ▶️',
+      action: ()=> goHome()
+    });
+  }
+}
+
+/* ---------------------------------------------------------------------
+   BANK RENDER HELPER (dipakai freeboard, area, square)
+--------------------------------------------------------------------- */
+function renderBankSelector(container, options){
+  // options: {types: ['x2','x','unit'], allowNeg: bool, note: string}
+  container.innerHTML = '';
+  container.style.flexDirection = window.innerWidth<=880 ? 'row' : 'column';
+
+  const title = document.createElement('h3');
+  title.textContent = 'Bank Ubin';
+  container.appendChild(title);
+
+  const group = document.createElement('div');
+  group.className = 'bank-group';
+  const row = document.createElement('div');
+  row.className = 'bank-row';
+  group.appendChild(row);
+  container.appendChild(group);
+
+  function addSlot(type, sign){
+    const slot = document.createElement('div');
+    slot.className = 'bank-slot';
+    slot.dataset.type = type; slot.dataset.sign = sign;
+    const t = makeTileEl(type, sign, {sz:'bank'});
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.textContent = tileLabel(type, sign);
+    slot.appendChild(t); slot.appendChild(lbl);
+    enableBankDrag(slot, type, sign);
+    row.appendChild(slot);
+  }
+
+  options.types.forEach(type=> addSlot(type, 1));
+  if(options.allowNeg){
+    options.types.forEach(type=> addSlot(type, -1));
+  }
+
+  const legend = document.createElement('div');
+  legend.className = 'legend-mini';
+  legend.innerHTML = `<b>Ingat:</b> Hijau = positif, Merah = negatif.<br><b>Seret (drag)</b> ubin di atas ke area kerja untuk menaruhnya. Ketuk ubin yang sudah ditaruh untuk menghapusnya.`;
+  container.appendChild(legend);
+}
+
+/* ---------------------------------------------------------------------
+   GUIDE MODAL (paged) & FIRST-RUN TUTORIAL
+--------------------------------------------------------------------- */
+const GUIDE_PAGES = [
+  { title:'Selamat Datang di Algebra Tiles! 🧩', body:`
+    <p>Aplikasi ini membantumu memahami <b>Aljabar</b> secara konkret menggunakan <b>Ubin Aljabar</b> — media visual yang memakai konsep luas untuk menggambarkan variabel dan konstanta.</p>
+    <div style="display:flex;gap:16px;justify-content:center;align-items:flex-end;margin:18px 0;flex-wrap:wrap;">
+      <div style="text-align:center;"><div class="tile pos sz-mini t-unit" style="margin:0 auto 6px;width:34px;height:34px;font-size:.85rem;">+1</div><small>Satuan</small></div>
+      <div style="text-align:center;"><div class="tile pos sz-mini t-x" style="margin:0 auto 6px;width:16px;height:60px;font-size:.6rem;">x</div><small>Variabel x</small></div>
+      <div style="text-align:center;"><div class="tile pos sz-mini t-x2" style="margin:0 auto 6px;width:60px;height:60px;font-size:1rem;">x²</div><small>Kuadrat x²</small></div>
+    </div>` },
+  { title:'Cara Menggunakan 👆', body:`
+    <ol style="padding-left:20px;line-height:1.8;">
+      <li><b>Sentuh &amp; tahan</b> (atau klik) salah satu ubin di panel <b>Bank Ubin</b>, lalu <b>seret (drag)</b> ke area kerja.</li>
+      <li><b>Lepaskan</b> ubin tepat di atas area kerja / kotak yang diinginkan untuk menaruhnya.</li>
+      <li>Ketuk ubin yang sudah ditaruh untuk <b>menghapusnya</b>.</li>
+      <li>Selesaikan misi lalu tekan <b>"Cek Jawaban"</b>.</li>
+    </ol>
+    <p>Semua bisa dilakukan dengan <b>sentuhan jari (touchscreen)</b> maupun mouse.</p>` },
+  { title:'Alur Belajar (CRA) 🧠', body:`
+    <p>Aplikasi ini mengikuti metode <b>CRA</b>:</p>
+    <ul style="padding-left:20px;line-height:1.8;">
+      <li><b>Konkret</b> — memanipulasi ubin langsung di layar.</li>
+      <li><b>Representasional</b> — melihat susunan ubin sebagai gambar/model.</li>
+      <li><b>Abstrak</b> — akhirnya memahami simbol matematika tanpa ubin.</li>
+    </ul>
+    <p>Ada <b>9 modul berurutan</b> — mulai dari mengenal ubin, bilangan bulat, suku sejenis, penjumlahan/pengurangan, perkalian, faktorisasi, persamaan linear, melengkapi kuadrat, hingga evaluasi akhir. Modul terbuka satu per satu setelah kamu menyelesaikan modul sebelumnya.</p>` },
+  { title:'Siap Memulai? 🚀', body:`
+    <p>Selesaikan setiap misi di panel kanan (atau lewat tombol 📋 Instruksi di layar kecil). Kumpulkan semua ✅ di peta belajar untuk menjadi <b>Master Aljabar</b>!</p>
+    <p style="text-align:center;font-size:1.3rem;margin-top:14px;">🎉 Selamat belajar sambil bermain! 🎉</p>` },
+];
+let guidePage = 0;
+function openGuide(){ guidePage = 0; renderGuide(); openModal('modalGuide'); }
+function renderGuide(){
+  const p = GUIDE_PAGES[guidePage];
+  document.getElementById('guideBody').innerHTML = `<h2>${p.title}</h2><div class="txt">${p.body}</div>`;
+  const dots = document.getElementById('guideDots');
+  dots.innerHTML = GUIDE_PAGES.map((_,i)=>`<span class="${i===guidePage?'on':''}"></span>`).join('');
+  document.getElementById('guideBack').style.visibility = guidePage===0 ? 'hidden' : 'visible';
+  document.getElementById('guideNext').textContent = guidePage===GUIDE_PAGES.length-1 ? 'Mulai Sekarang! 🚀' : 'Lanjut →';
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('guideBack').addEventListener('click', ()=>{ if(guidePage>0){ guidePage--; renderGuide(); } });
+  document.getElementById('guideNext').addEventListener('click', ()=>{
+    if(guidePage < GUIDE_PAGES.length-1){ guidePage++; renderGuide(); }
+    else{ closeModal('modalGuide'); }
+  });
+  document.getElementById('btnHelp').addEventListener('click', openGuide);
+  document.getElementById('btnBack').addEventListener('click', ()=>{
+    if(currentModuleId) goHome(); else toast('Kamu sudah di Beranda 🏠');
+  });
+  document.getElementById('btnInstruksi').addEventListener('click', ()=>{
+    const m = currentModule(); if(!m) return;
+    if(m.kind==='quiz'){ toast('Jawab pertanyaan di layar untuk melanjutkan.'); return; }
+    showInfoModal(m.levels[m.progressLevel]);
+  });
+  document.getElementById('btnMissionMobile').addEventListener('click', ()=>{
+    const m = currentModule(); if(!m) return;
+    showInfoModal(m.levels[m.progressLevel]);
+  });
+  document.getElementById('infoStart').addEventListener('click', ()=> closeModal('modalInfo'));
+  document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+  ['fullscreenchange','webkitfullscreenchange','msfullscreenchange'].forEach(ev=>
+    document.addEventListener(ev, updateFullscreenIcon));
+
+  showModeSelect();
+});
+
+/* ---------------------------------------------------------------------
+   FULLSCREEN
+--------------------------------------------------------------------- */
+function isFullscreenActive(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+}
+function toggleFullscreen(){
+  if(!isFullscreenActive()){
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if(req) req.call(el);
+    else toast('Layar penuh tidak didukung di perangkat ini.');
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if(exit) exit.call(document);
+  }
+}
+function updateFullscreenIcon(){
+  const btn = document.getElementById('btnFullscreen');
+  if(!btn) return;
+  const active = isFullscreenActive();
+  btn.textContent = active ? '⤢' : '⛶';
+  btn.title = active ? 'Keluar Layar Penuh' : 'Layar Penuh';
+}
+
+/* =======================================================================
+   ENGINE: FREEBOARD (Modul 1-4)
+   ======================================================================= */
+const FreeboardEngine = {
+  tiles: [],
+  start(m, lvl){
+    this.m = m; this.lvl = lvl; this.tiles = [];
+    selectedTile = null;
+
+    renderBankSelector(document.getElementById('bankPanel'), {
+      types: lvl.allowTypes || ['x2','x','unit'],
+      allowNeg: !!lvl.allowNeg
+    });
+
+    this.renderWork();
+    this.renderStatus();
+  },
+  renderWork(){
+    const work = document.getElementById('workArea');
+    work.innerHTML = '';
+    const board = document.createElement('div');
+    board.className = 'freeboard-area dropzone' + (this.tiles.length===0 ? ' empty' : '');
+    board._onDrop = (type, sign)=>{
+      this.tiles.push({id:uid(), type, sign});
+      this.renderWork();
+    };
+    this.tiles.forEach(t=>{
+      const el = makeTileEl(t.type, t.sign, {sz:'board', cls:'pop-in'});
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        this.tiles = this.tiles.filter(x=>x.id!==t.id);
+        this.renderWork(); this.updateExprPill();
+      });
+      board.appendChild(el);
+    });
+    work.appendChild(board);
+    this.updateExprPill();
+    this.syncExprText();
+  },
+  updateExprPill(){
+    document.getElementById('exprPill').textContent = formatExpr(compileTiles(this.tiles));
+  },
+  renderStatus(){
+    const panel = document.getElementById('statusPanel');
+    const lvl = this.lvl;
+    panel.innerHTML = `
+      <div class="mission-card">
+        <div class="mission-badge">${lvl.badge||'Misi'}</div>
+        <div class="mission-title">${lvl.title}</div>
+        <div class="mission-desc">${lvl.desc}</div>
+        ${lvl.hint? `<div class="mission-hint">💡 <b>Petunjuk:</b> ${lvl.hint}</div>` : ''}
+      </div>
+      <div class="status-box">
+        <div class="status-label">Bentuk Aljabar Saat Ini</div>
+        <div class="status-val" id="statusExpr">0</div>
+      </div>
+      <div class="status-actions">
+        ${lvl.allowGroup? '<button class="btn btn-accent btn-block" id="btnGroup">🗂️ Kelompokkan</button>' : ''}
+        ${lvl.allowSimplify? '<button class="btn btn-accent btn-block" id="btnSimplify">💥 Hilangkan Pasangan Nol</button>' : ''}
+        <button class="btn btn-primary btn-block" id="btnCheck">✅ Cek Jawaban</button>
+        <button class="btn btn-clear btn-block" id="btnClear">🗑️ Bersihkan</button>
+      </div>
+    `;
+    this.syncExprText();
+    if(lvl.allowGroup) document.getElementById('btnGroup').addEventListener('click', ()=> this.group());
+    if(lvl.allowSimplify) document.getElementById('btnSimplify').addEventListener('click', ()=> this.simplify());
+    document.getElementById('btnCheck').addEventListener('click', ()=> this.check());
+    document.getElementById('btnClear').addEventListener('click', ()=>{ this.tiles=[]; this.renderWork(); });
+  },
+  syncExprText(){
+    const el = document.getElementById('statusExpr');
+    if(el) el.textContent = formatExpr(compileTiles(this.tiles));
+  },
+  group(){
+    const order = {x2:0, x:1, unit:2};
+    this.tiles.sort((a,b)=> (order[a.type]-order[b.type]) || (b.sign-a.sign));
+    this.renderWork();
+    toast('🗂️ Ubin sejenis sudah dikelompokkan!');
+  },
+  simplify(){
+    let removed = false;
+    const toRemove = new Set();
+    ['x2','x','unit'].forEach(type=>{
+      const pos = this.tiles.filter(t=>t.type===type && t.sign>0);
+      const neg = this.tiles.filter(t=>t.type===type && t.sign<0);
+      const n = Math.min(pos.length, neg.length);
+      for(let i=0;i<n;i++){
+        removed = true;
+        toRemove.add(pos[i].id);
+        toRemove.add(neg[i].id);
+      }
+    });
+    if(!removed){ toast('Tidak ada pasangan nol yang bisa dihilangkan.'); return; }
+
+    // Fade out the matching DOM tiles (rendered in the same order as this.tiles), then remove from state.
+    const boardEl = document.querySelector('.freeboard-area');
+    const domTiles = boardEl ? [...boardEl.children] : [];
+    this.tiles.forEach((t, i)=>{
+      if(toRemove.has(t.id) && domTiles[i]) domTiles[i].classList.add('fade-out');
+    });
+    setTimeout(()=>{
+      this.tiles = this.tiles.filter(t=> !toRemove.has(t.id));
+      this.renderWork();
+      toast('💥 Pasangan nol berhasil dihilangkan!');
+    }, 650);
+  },
+  check(){
+    const lvl = this.lvl;
+    if(lvl.requireSimplifyClick){
+      const stillHasPair = ['x2','x','unit'].some(type=>{
+        const pos = this.tiles.some(t=>t.type===type && t.sign>0);
+        const neg = this.tiles.some(t=>t.type===type && t.sign<0);
+        return pos && neg;
+      });
+      if(stillHasPair){
+        showResultModal({icon:'💡', title:'Hampir Sampai!', body:'Susunan ubinmu sudah benar. Sekarang tekan tombol <b>"Hilangkan Pasangan Nol"</b> dulu untuk menyederhanakannya.', actionText:'Oke, Mengerti'});
+        return;
+      }
+    }
+    const c = compileTiles(this.tiles);
+    const t = lvl.target;
+    if(c.x2===t.x2 && c.x===t.x && c.unit===t.unit){
+      showResultModal({
+        icon:'🎉', title:'Luar Biasa!',
+        body:`Kamu berhasil menyusun bentuk <b>${formatExpr(t)}</b> dengan tepat!`,
+        actionText:'Lanjut ▶️',
+        action: ()=> nextLevelOrComplete(this.m)
+      });
+    } else {
+      showResultModal({
+        icon:'🤔', title:'Belum Tepat',
+        body:`Target misi ini adalah <b>${formatExpr(t)}</b>.<br>Susunanmu saat ini: <b>${formatExpr(c)}</b>. Periksa kembali jumlah dan tanda ubinmu.`,
+        actionText:'Coba Lagi'
+      });
+    }
+  }
+};
+
+/* =======================================================================
+   ENGINE: AREA MODEL (Modul Perkalian & Faktorisasi)
+   ======================================================================= */
+const AreaEngine = {
+  start(m, lvl){
+    this.m = m; this.lvl = lvl;
+    this.top = []; this.left = []; this.product = {};
+    selectedTile = null;
+
+    renderBankSelector(document.getElementById('bankPanel'), { types:['x2','x','unit'], allowNeg:true });
+    this.renderWork();
+    this.renderStatus();
+  },
+  cellsFilled(){ return Object.keys(this.product).length; },
+  totalCells(){ return this.top.length * this.left.length; },
+  expectedCell(i,j){
+    const top = this.top[j], left = this.left[i];
+    let type;
+    if(top.type==='x' && left.type==='x') type='x2';
+    else if(top.type==='unit' && left.type==='unit') type='unit';
+    else type='x';
+    return { type, sign: top.sign*left.sign };
+  },
+  renderWork(){
+    const work = document.getElementById('workArea');
+    work.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'area-wrap';
+
+    const corner = document.createElement('div'); corner.className='corner';
+    const topZone = document.createElement('div'); topZone.className='zone top';
+    const leftZone = document.createElement('div'); leftZone.className='zone left';
+    const grid = document.createElement('div'); grid.className='grid-wrap';
+
+    // top factor tiles
+    this.top.forEach((t, idx)=>{
+      const el = makeTileEl(t.type, t.sign, {sz:'board', horiz:(t.type==='x'), cls:'pop-in'});
+      el.addEventListener('click', (e)=>{ e.stopPropagation(); this.top.splice(idx,1); this.product={}; this.renderWork(); });
+      topZone.appendChild(el);
+    });
+    topZone.classList.add('dropzone');
+    topZone._onDrop = (type, sign)=>{
+      if(type==='x2'){ toast('Ubin x² hanya untuk mengisi kotak hasil kali, bukan faktor di tepi.'); return; }
+      this.top.push({type, sign});
+      this.product = {};
+      this.renderWork();
+    };
+
+    // left factor tiles
+    this.left.forEach((t, idx)=>{
+      const el = makeTileEl(t.type, t.sign, {sz:'board', cls:'pop-in'});
+      el.addEventListener('click', (e)=>{ e.stopPropagation(); this.left.splice(idx,1); this.product={}; this.renderWork(); });
+      leftZone.appendChild(el);
+    });
+    leftZone.classList.add('dropzone');
+    leftZone._onDrop = (type, sign)=>{
+      if(type==='x2'){ toast('Ubin x² hanya untuk mengisi kotak hasil kali, bukan faktor di tepi.'); return; }
+      this.left.push({type, sign});
+      this.product = {};
+      this.renderWork();
+    };
+
+    // product grid
+    if(this.top.length===0 || this.left.length===0){
+      grid.innerHTML = '<div class="grid-placeholder">Susun faktor Atas & Kiri dulu untuk membuka area hasil kali.</div>';
+      grid.style.width = 'calc(var(--u) * 3)'; grid.style.height = 'calc(var(--u) * 3)';
+    } else {
+      const colSizes = this.top.map(t=> t.type==='x' ? 'var(--len)' : 'var(--u)');
+      const rowSizes = this.left.map(t=> t.type==='x' ? 'var(--len)' : 'var(--u)');
+      grid.style.gridTemplateColumns = colSizes.join(' ');
+      grid.style.gridTemplateRows = rowSizes.join(' ');
+      for(let i=0;i<this.left.length;i++){
+        for(let j=0;j<this.top.length;j++){
+          const key = `${i}-${j}`;
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell';
+          if(this.product[key]){
+            const pt = this.product[key];
+            const tEl = makeTileEl(pt.type, pt.sign, {sz:'board', horiz:false, cls:'pop-in'});
+            tEl.style.width='100%'; tEl.style.height='100%';
+            tEl.addEventListener('click', (e)=>{ e.stopPropagation(); delete this.product[key]; this.renderWork(); });
+            cell.appendChild(tEl);
+          } else {
+            cell.classList.add('dropzone');
+            cell._onDrop = (type, sign)=>{
+              this.product[key] = {type, sign};
+              this.renderWork();
+            };
+          }
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    wrap.appendChild(corner); wrap.appendChild(topZone);
+    wrap.appendChild(leftZone); wrap.appendChild(grid);
+    work.appendChild(wrap);
+    this.updateExprPill();
+    this.syncExprText();
+  },
+  updateExprPill(){
+    const top = formatExpr(compileTiles(this.top));
+    document.getElementById('exprPill').textContent = `(${this.top.length? top:'0'}) × (${this.left.length? formatExpr(compileTiles(this.left)):'0'})`;
+  },
+  renderStatus(){
+    const panel = document.getElementById('statusPanel');
+    const lvl = this.lvl;
+    panel.innerHTML = `
+      <div class="mission-card">
+        <div class="mission-badge">${lvl.badge||'Misi'}</div>
+        <div class="mission-title">${lvl.title}</div>
+        <div class="mission-desc">${lvl.desc}</div>
+        ${lvl.hint? `<div class="mission-hint">💡 <b>Petunjuk:</b> ${lvl.hint}</div>` : ''}
+      </div>
+      <div class="status-box">
+        <div class="status-label">Model Saat Ini</div>
+        <div class="status-val" id="statusExpr" style="font-size:.95rem;"></div>
+      </div>
+      <div class="status-actions">
+        <button class="btn btn-primary btn-block" id="btnCheck">✅ Cek Jawaban</button>
+        <button class="btn btn-clear btn-block" id="btnClear">🗑️ Bersihkan</button>
+      </div>
+    `;
+    this.syncExprText();
+    document.getElementById('btnCheck').addEventListener('click', ()=> this.check());
+    document.getElementById('btnClear').addEventListener('click', ()=>{ this.top=[]; this.left=[]; this.product={}; this.renderWork(); });
+  },
+  syncExprText(){
+    const el = document.getElementById('statusExpr');
+    if(!el) return;
+    const top = this.top.length? formatExpr(compileTiles(this.top)) : '0';
+    const left = this.left.length? formatExpr(compileTiles(this.left)) : '0';
+    const prod = this.cellsFilled()? formatExpr(compileTiles(Object.values(this.product))) : '0';
+    el.innerHTML = `(${top}) × (${left})<br>= ${prod}`;
+  },
+  check(){
+    const lvl = this.lvl;
+    if(this.top.length===0 || this.left.length===0){
+      showResultModal({icon:'🤔', title:'Belum Lengkap', body:'Susun dulu faktor di sisi atas dan kiri.', actionText:'Oke'}); return;
+    }
+    if(this.cellsFilled() < this.totalCells()){
+      showResultModal({icon:'🤔', title:'Belum Lengkap', body:'Masih ada kotak kosong di area hasil kali yang belum diisi ubin.', actionText:'Oke'}); return;
+    }
+    let allCorrect = true;
+    for(let i=0;i<this.left.length;i++){
+      for(let j=0;j<this.top.length;j++){
+        const exp = this.expectedCell(i,j);
+        const act = this.product[`${i}-${j}`];
+        if(!act || act.type!==exp.type || act.sign!==exp.sign) allCorrect = false;
+      }
+    }
+    if(!allCorrect){
+      showResultModal({icon:'🤔', title:'Ada yang Kurang Tepat', body:'Periksa kembali hukum tanda (+ / -) dan jenis ubin pada setiap kotak.', actionText:'Coba Lagi'});
+      return;
+    }
+    if(this.m.mode==='build'){
+      const tc = compileTiles(this.top), lc = compileTiles(this.left);
+      const okNormal = tc.x===lvl.targetTop.x && tc.unit===lvl.targetTop.unit && lc.x===lvl.targetLeft.x && lc.unit===lvl.targetLeft.unit;
+      const okSwap = tc.x===lvl.targetLeft.x && tc.unit===lvl.targetLeft.unit && lc.x===lvl.targetTop.x && lc.unit===lvl.targetTop.unit;
+      if(!okNormal && !okSwap){
+        showResultModal({icon:'🤔', title:'Faktor Belum Sesuai', body:'Kotak hasil kali sudah benar, tapi faktor di tepi belum sesuai dengan misi. Periksa kembali soalnya.', actionText:'Coba Lagi'});
+        return;
+      }
+      showResultModal({icon:'🎉', title:'Perkalian Berhasil!', body:'Kamu berhasil memodelkan perkalian aljabar dengan tepat menggunakan Model Luas!', actionText:'Lanjut ▶️', action:()=>nextLevelOrComplete(this.m)});
+    } else {
+      const total = compileTiles(Object.values(this.product));
+      const tp = lvl.targetProduct;
+      if(total.x2===tp.x2 && total.x===tp.x && total.unit===tp.unit){
+        const topStr = formatExpr(compileTiles(this.top)), leftStr = formatExpr(compileTiles(this.left));
+        showResultModal({icon:'🎉', title:'Faktor Ditemukan!', body:`Kamu berhasil menemukan faktornya: <b>(${topStr}) × (${leftStr})</b> = ${formatExpr(tp)}`, actionText:'Lanjut ▶️', action:()=>nextLevelOrComplete(this.m)});
+      } else {
+        showResultModal({icon:'🤔', title:'Belum Sesuai Target', body:`Total hasil kalimu adalah <b>${formatExpr(total)}</b>, sedangkan target misi adalah <b>${formatExpr(tp)}</b>. Coba ubah faktor di tepi atas/kiri.`, actionText:'Coba Lagi'});
+      }
+    }
+  }
+};
+
+/* =======================================================================
+   ENGINE: SCALE (Modul PLSV / Timbangan)
+   ======================================================================= */
+const ScaleEngine = {
+  start(m, lvl){
+    this.m = m; this.lvl = lvl;
+    this.left = lvl.initial.left.map(t=>({...t,id:uid()}));
+    this.right = lvl.initial.right.map(t=>({...t,id:uid()}));
+    this.d0 = this.diff();
+    this.stepIndex = 0;
+    selectedTile = null;
+
+    renderBankSelector(document.getElementById('bankPanel'), { types:['x','unit'], allowNeg:true });
+    this.renderWork();
+    this.renderStatus();
+  },
+  currentStep(){ return this.lvl.steps[this.stepIndex]; },
+  diff(){
+    const l = compileTiles(this.left), r = compileTiles(this.right);
+    return { x: l.x - r.x, unit: l.unit - r.unit };
+  },
+  // Hitung derajat kemiringan timbangan berdasarkan jumlah ubin di tiap sisi,
+  // supaya timbangan terasa "bergerak naik turun" setiap kali ubin ditambah/dikurangi.
+  computeTilt(){
+    const diff = this.right.length - this.left.length; // + => kanan lebih berat
+    const deg = Math.max(-13, Math.min(13, diff * 2.6));
+    return deg;
+  },
+  renderWork(){
+    const work = document.getElementById('workArea');
+    work.innerHTML = '';
+    const wrap = document.createElement('div'); wrap.className='scale-wrap';
+
+    const eq = document.createElement('div'); eq.className='eq-display'; eq.textContent = this.lvl.eq;
+
+    // Titik-titik progres langkah
+    const dots = document.createElement('div'); dots.className='step-progress';
+    this.lvl.steps.forEach((s,i)=>{
+      const d = document.createElement('div');
+      d.className = 'step-dot' + (i<this.stepIndex? ' done' : (i===this.stepIndex? ' now':''));
+      dots.appendChild(d);
+    });
+
+    const rig = document.createElement('div'); rig.className='scale-rig';
+    const pivotStand = document.createElement('div'); pivotStand.className='pivot-stand';
+    const pivotCap = document.createElement('div'); pivotCap.className='pivot-cap';
+    const beamBar = document.createElement('div'); beamBar.className='beam-bar';
+    const panRow = document.createElement('div'); panRow.className='pan-row';
+
+    const tiltDeg = this.computeTilt();
+    const tiltRad = tiltDeg * Math.PI/180;
+    const armPx = 46; // jarak vertikal maksimum pergerakan piringan
+    const leftY = -Math.sin(tiltRad) * armPx;   // kanan berat -> kiri naik (negatif)
+    const rightY = Math.sin(tiltRad) * armPx;   // kanan berat -> kanan turun (positif)
+
+    beamBar.style.transform = `rotate(${tiltDeg}deg)`;
+
+    const makePan = (arr, sideLabel, sideY, heavier)=>{
+      const col = document.createElement('div'); col.className='pan-col';
+      col.style.transform = `translateY(${sideY}px)`;
+      const chain = document.createElement('div'); chain.className='chain';
+      const lbl = document.createElement('div'); lbl.className='pan-label'; lbl.textContent = sideLabel + (heavier? ' ⬇️' : '');
+      const pan = document.createElement('div'); pan.className='pan dropzone' + (heavier? ' tip-heavy' : '');
+      arr.forEach(t=>{
+        const el = makeTileEl(t.type, t.sign, {sz:'board', cls:'pop-in'});
+        el.addEventListener('click', (e)=>{ e.stopPropagation(); const i=arr.findIndex(x=>x.id===t.id); arr.splice(i,1); this.renderWork(); });
+        pan.appendChild(el);
+      });
+      pan._onDrop = (type, sign)=>{
+        arr.push({type, sign, id:uid()});
+        this.renderWork();
+      };
+      col.appendChild(chain); col.appendChild(lbl); col.appendChild(pan);
+      return col;
+    };
+
+    panRow.appendChild(makePan(this.left, 'Sisi Kiri', leftY, this.left.length>this.right.length));
+    panRow.appendChild(makePan(this.right, 'Sisi Kanan', rightY, this.right.length>this.left.length));
+
+    rig.appendChild(pivotStand); rig.appendChild(pivotCap); rig.appendChild(beamBar); rig.appendChild(panRow);
+
+    wrap.appendChild(eq); wrap.appendChild(dots); wrap.appendChild(rig);
+    if(this.left.length !== this.right.length){
+      const tip = document.createElement('div'); tip.className='tilt-hint';
+      tip.textContent = '⚖️ Jumlah ubin di kedua sisi belum sama banyak — timbangan miring.';
+      wrap.appendChild(tip);
+    }
+    work.appendChild(wrap);
+    this.updateExprPill();
+    this.syncExprText();
+  },
+  updateExprPill(){
+    document.getElementById('exprPill').textContent = `${formatExpr(compileTiles(this.left))}  =  ${formatExpr(compileTiles(this.right))}`;
+  },
+  renderStatus(){
+    const panel = document.getElementById('statusPanel');
+    const lvl = this.lvl;
+    const step = this.currentStep();
+    const total = lvl.steps.length;
+    panel.innerHTML = `
+      <div class="mission-card">
+        <div class="mission-badge">${lvl.badge||'Misi'} · Langkah ${this.stepIndex+1}/${total}</div>
+        <div class="mission-title">${lvl.title}</div>
+        <div class="mission-desc">${step.desc}</div>
+        ${step.hint? `<div class="mission-hint">💡 <b>Petunjuk:</b> ${step.hint}</div>` : ''}
+      </div>
+      <div class="status-box">
+        <div class="status-label">Persamaan Saat Ini</div>
+        <div class="status-val" id="statusExpr" style="font-size:.95rem;"></div>
+      </div>
+      <div class="status-actions">
+        ${step.action==='check' ? `<button class="btn btn-primary btn-block" id="btnStepCheck">✅ Cek Langkah</button>` : ''}
+        ${step.action==='zero' ? `<button class="btn btn-accent btn-block" id="btnZero">💥 Hilangkan Pasangan Nol</button>` : ''}
+        ${step.action==='divide' ? `<button class="btn btn-primary btn-block" id="btnDivide">➗ Bagi Rata</button>` : ''}
+        <button class="btn btn-clear btn-block" id="btnReset">↩️ Ulangi dari Awal</button>
+      </div>
+    `;
+    this.syncExprText();
+    if(step.action==='check') document.getElementById('btnStepCheck').addEventListener('click', ()=> this.checkStep());
+    if(step.action==='zero') document.getElementById('btnZero').addEventListener('click', ()=> this.zeroPair());
+    if(step.action==='divide') document.getElementById('btnDivide').addEventListener('click', ()=> this.divide());
+    document.getElementById('btnReset').addEventListener('click', ()=> this.start(this.m, this.lvl));
+  },
+  syncExprText(){
+    const el = document.getElementById('statusExpr');
+    if(el) el.innerHTML = `${formatExpr(compileTiles(this.left))}<br>=<br>${formatExpr(compileTiles(this.right))}`;
+  },
+  advanceStep(){
+    if(this.stepIndex < this.lvl.steps.length - 1){
+      this.stepIndex++;
+      this.renderWork();
+      this.renderStatus();
+      toast('👍 Langkah selesai! Lanjut ke langkah berikutnya.');
+    }
+  },
+  checkStep(){
+    const step = this.currentStep();
+    const lc = countTilesDetailed(this.left), rc = countTilesDetailed(this.right);
+    const tl = step.target.left, tr = step.target.right;
+    const ok = lc.xPos===tl.xPos && lc.xNeg===tl.xNeg && lc.unitPos===tl.unitPos && lc.unitNeg===tl.unitNeg &&
+               rc.xPos===tr.xPos && rc.xNeg===tr.xNeg && rc.unitPos===tr.unitPos && rc.unitNeg===tr.unitNeg;
+    if(!ok){
+      showResultModal({icon:'🤔', title:'Belum Tepat', body:'Susunan ubin di timbangan belum sesuai instruksi langkah ini. Perhatikan jumlah ubin positif dan negatif di kedua sisi, lalu coba lagi.', actionText:'Coba Lagi'});
+      return;
+    }
+    this.advanceStep();
+  },
+  zeroPairOnSide(arr){
+    let removed = false;
+    ['x','unit'].forEach(type=>{
+      const pos = arr.filter(t=>t.type===type && t.sign>0);
+      const neg = arr.filter(t=>t.type===type && t.sign<0);
+      const n = Math.min(pos.length, neg.length);
+      for(let i=0;i<n;i++){
+        removed = true;
+        const idA = pos[i].id, idB = neg[i].id;
+        const ia = arr.findIndex(x=>x.id===idA); if(ia>-1) arr.splice(ia,1);
+        const ib = arr.findIndex(x=>x.id===idB); if(ib>-1) arr.splice(ib,1);
+      }
+    });
+    return removed;
+  },
+  zeroPair(){
+    const r1 = this.zeroPairOnSide(this.left);
+    const r2 = this.zeroPairOnSide(this.right);
+    if(!r1 && !r2){ toast('Tidak ada pasangan nol yang bisa dihilangkan saat ini.'); return; }
+    this.renderWork();
+    toast('💥 Pasangan nol dihilangkan!');
+    this.advanceStep();
+  },
+  divide(){
+    const d = this.diff();
+    if(d.x !== this.d0.x || d.unit !== this.d0.unit){
+      showResultModal({icon:'⚖️', title:'Timbangan Tidak Seimbang', body:'Sepertinya kamu menambahkan ubin hanya ke satu sisi. Ingat, apa pun yang kamu lakukan di satu sisi harus dilakukan juga di sisi lain agar tetap seimbang!', actionText:'Oke, Saya Perbaiki'});
+      return;
+    }
+    const lc = compileTiles(this.left), rc = compileTiles(this.right);
+    if(lc.unit!==0 || lc.x<=0){
+      showResultModal({icon:'🤔', title:'Belum Siap Dibagi', body:'Sisi kiri harus tersisa hanya ubin <b>x positif</b> saja (tanpa ubin satuan) sebelum dibagi.', actionText:'Oke'});
+      return;
+    }
+    if(rc.x!==0){
+      showResultModal({icon:'🤔', title:'Belum Siap Dibagi', body:'Sisi kanan harus tersisa hanya ubin satuan saja (tanpa ubin x).', actionText:'Oke'});
+      return;
+    }
+    if(rc.unit % lc.x !== 0){
+      showResultModal({icon:'🤔', title:'Belum Bisa Dibagi Rata', body:'Jumlah ubin satuan di kanan tidak habis dibagi jumlah ubin x di kiri. Periksa kembali langkahmu.', actionText:'Oke'});
+      return;
+    }
+    const val = rc.unit / lc.x;
+    showResultModal({
+      icon:'🎉', title:'Persamaan Terpecahkan!',
+      body:`Setelah dibagi rata, ditemukan <b>x = ${val}</b>. Timbangan tetap seimbang di setiap langkah — itulah kunci menyelesaikan persamaan linear!`,
+      actionText:'Lanjut ▶️', action:()=>nextLevelOrComplete(this.m)
+    });
+  }
+};
+
+/* =======================================================================
+   ENGINE: SQUARE (Modul Melengkapi Kuadrat Sempurna)
+   ======================================================================= */
+const SquareEngine = {
+  start(m, lvl){
+    this.m = m; this.lvl = lvl;
+    this.tr = 0; this.bl = 0; this.br = new Set();
+    selectedTile = null;
+    renderBankSelector(document.getElementById('bankPanel'), { types:['x','unit'], allowNeg:false });
+    this.renderWork();
+    this.renderStatus();
+  },
+  renderWork(){
+    const work = document.getElementById('workArea');
+    work.innerHTML = '';
+    const sq = document.createElement('div'); sq.className='square-wrap';
+
+    // Row 1: TL (x2 fixed) + TR (strip of vertical x tiles)
+    const row1 = document.createElement('div'); row1.className='quad-row';
+    const tl = document.createElement('div'); tl.className='quad-tl';
+    tl.style.width='var(--len)'; tl.style.height='var(--len)';
+    tl.appendChild(makeTileEl('x2',1,{sz:'board', cls:'locked'}));
+    row1.appendChild(tl);
+
+    const tr = document.createElement('div'); tr.className='quad-strip tr dropzone';
+    tr.style.height='var(--len)'; tr.style.minWidth='var(--u)';
+    for(let i=0;i<this.tr;i++){
+      const el = makeTileEl('x',1,{sz:'board', cls:'pop-in'});
+      el.addEventListener('click', (e)=>{ e.stopPropagation(); this.tr--; this.cleanBr(); this.renderWork(); });
+      tr.appendChild(el);
+    }
+    tr._onDrop = (type)=>{
+      if(type!=='x'){ toast('Hanya ubin x yang bisa ditaruh di sisi ini.'); return; }
+      this.tr++; this.renderWork();
+    };
+    row1.appendChild(tr);
+
+    // Row 2: BL (strip of horizontal x tiles) + BR (unit grid)
+    const row2 = document.createElement('div'); row2.className='quad-row';
+    const bl = document.createElement('div'); bl.className='quad-strip bl dropzone';
+    bl.style.width='var(--len)'; bl.style.minHeight='var(--u)';
+    for(let i=0;i<this.bl;i++){
+      const el = makeTileEl('x',1,{sz:'board', horiz:true, cls:'pop-in'});
+      el.addEventListener('click', (e)=>{ e.stopPropagation(); this.bl--; this.cleanBr(); this.renderWork(); });
+      bl.appendChild(el);
+    }
+    bl._onDrop = (type)=>{
+      if(type!=='x'){ toast('Hanya ubin x yang bisa ditaruh di sisi ini.'); return; }
+      this.bl++; this.renderWork();
+    };
+    row2.appendChild(bl);
+
+    const br = document.createElement('div'); br.className='quad-br';
+    if(this.tr===0 || this.bl===0){
+      br.style.width='var(--u)'; br.style.height='var(--u)';
+      br.innerHTML = '<div class="grid-placeholder" style="font-size:.65rem;padding:2px;">Isi ubin x dulu</div>';
+    } else {
+      br.style.gridTemplateColumns = `repeat(${this.tr}, var(--u))`;
+      br.style.gridTemplateRows = `repeat(${this.bl}, var(--u))`;
+      for(let i=0;i<this.bl;i++){
+        for(let j=0;j<this.tr;j++){
+          const key = `${i}-${j}`;
+          const cell = document.createElement('div'); cell.className='grid-cell';
+          if(this.br.has(key)){
+            const el = makeTileEl('unit',1,{sz:'board'});
+            el.style.width='100%'; el.style.height='100%';
+            el.addEventListener('click', (e)=>{ e.stopPropagation(); this.br.delete(key); this.renderWork(); });
+            cell.appendChild(el);
+          } else {
+            cell.classList.add('dropzone');
+            cell._onDrop = (type)=>{
+              if(type!=='unit'){ toast('Hanya ubin +1 yang bisa mengisi pojok ini.'); return; }
+              this.br.add(key); this.renderWork();
+            };
+          }
+          br.appendChild(cell);
+        }
+      }
+    }
+    row2.appendChild(br);
+
+    sq.appendChild(row1); sq.appendChild(row2);
+    work.appendChild(sq);
+    this.updateExprPill();
+    this.syncExprText();
+  },
+  cleanBr(){
+    const valid = new Set();
+    this.br.forEach(key=>{
+      const [i,j] = key.split('-').map(Number);
+      if(i < this.bl && j < this.tr) valid.add(key);
+    });
+    this.br = valid;
+  },
+  updateExprPill(){
+    const b = this.tr + this.bl;
+    document.getElementById('exprPill').textContent = `x² + ${b}x + ?`;
+  },
+  renderStatus(){
+    const panel = document.getElementById('statusPanel');
+    const lvl = this.lvl;
+    panel.innerHTML = `
+      <div class="mission-card">
+        <div class="mission-badge">${lvl.badge||'Misi'}</div>
+        <div class="mission-title">${lvl.title}</div>
+        <div class="mission-desc">${lvl.desc}</div>
+        ${lvl.hint? `<div class="mission-hint">💡 <b>Petunjuk:</b> ${lvl.hint}</div>` : ''}
+      </div>
+      <div class="status-box">
+        <div class="status-label">Total suku x saat ini</div>
+        <div class="status-val" id="statusExpr">0</div>
+      </div>
+      <div class="status-actions">
+        <button class="btn btn-primary btn-block" id="btnCheck">✅ Cek Jawaban</button>
+        <button class="btn btn-clear btn-block" id="btnClear">🗑️ Bersihkan</button>
+      </div>
+    `;
+    this.syncExprText();
+    document.getElementById('btnCheck').addEventListener('click', ()=> this.check());
+    document.getElementById('btnClear').addEventListener('click', ()=>{ this.tr=0; this.bl=0; this.br=new Set(); this.renderWork(); });
+  },
+  syncExprText(){
+    const el = document.getElementById('statusExpr');
+    if(el) el.textContent = `${this.tr} (kanan) + ${this.bl} (bawah) = ${this.tr+this.bl}x`;
+  },
+  check(){
+    const lvl = this.lvl;
+    if(this.tr !== this.bl){
+      showResultModal({icon:'🤔', title:'Belum Simetris', body:'Jumlah ubin x di kanan dan di bawah harus <b>sama banyak</b> agar bisa membentuk persegi yang simetris.', actionText:'Coba Lagi'});
+      return;
+    }
+    if(this.tr === 0){
+      showResultModal({icon:'🤔', title:'Belum Dimulai', body:'Tambahkan ubin x terlebih dahulu di sisi kanan dan bawah.', actionText:'Oke'});
+      return;
+    }
+    if(this.tr + this.bl !== lvl.b){
+      showResultModal({icon:'🤔', title:'Jumlah Belum Sesuai', body:`Total ubin x saat ini adalah ${this.tr+this.bl}, sedangkan misi meminta total <b>${lvl.b}x</b>. Sesuaikan jumlah ubinnya.`, actionText:'Coba Lagi'});
+      return;
+    }
+    const need = lvl.n * lvl.n;
+    if(this.br.size < need){
+      showResultModal({icon:'🤔', title:'Belum Lengkap', body:`Pojok kanan-bawah masih membutuhkan <b>${need - this.br.size}</b> ubin satuan lagi agar penuh.`, actionText:'Oke'});
+      return;
+    }
+    showResultModal({
+      icon:'🎉', title:'Kuadrat Sempurna Terbentuk!',
+      body:`(x + ${lvl.n})² = x² + ${lvl.b}x + ${need}. Kamu berhasil melengkapi kuadrat sempurna!`,
+      actionText:'Lanjut ▶️', action:()=>nextLevelOrComplete(this.m)
+    });
+  }
+};
+
+/* =======================================================================
+   ENGINE: QUIZ (Modul Evaluasi Akhir)
+   ======================================================================= */
+const QuizEngine = {
+  start(m){
+    this.m = m;
+    this.qIndex = 0; this.score = 0; this.answered = false;
+    document.getElementById('statusPanel').innerHTML = '';
+    this.renderQuestion();
+  },
+  renderQuestion(){
+    const work = document.getElementById('workArea');
+    document.getElementById('exprPill').textContent = `Skor: ${this.score} / ${this.m.questions.length}`;
+    const q = this.m.questions[this.qIndex];
+    this.answered = false;
+    const card = document.createElement('div');
+    card.className = 'quiz-card';
+    card.innerHTML = `
+      <div class="quiz-progress">Soal ${this.qIndex+1} dari ${this.m.questions.length}</div>
+      <div class="quiz-q">${q.q}</div>
+      <div id="quizOpts"></div>
+      <div id="quizExplain"></div>
+    `;
+    work.innerHTML = ''; work.appendChild(card);
+    const optWrap = card.querySelector('#quizOpts');
+    q.opts.forEach((opt, i)=>{
+      const btn = document.createElement('button');
+      btn.className = 'quiz-opt'; btn.textContent = opt;
+      btn.addEventListener('click', ()=> this.answer(i));
+      optWrap.appendChild(btn);
+    });
+  },
+  answer(i){
+    if(this.answered) return;
+    this.answered = true;
+    const q = this.m.questions[this.qIndex];
+    const opts = document.querySelectorAll('.quiz-opt');
+    opts.forEach((btn, idx)=>{
+      btn.disabled = true;
+      if(idx===q.correct) btn.classList.add('correct');
+      else if(idx===i) btn.classList.add('wrong');
+    });
+    if(i===q.correct) this.score++;
+    document.getElementById('exprPill').textContent = `Skor: ${this.score} / ${this.m.questions.length}`;
+    const exp = document.getElementById('quizExplain');
+    exp.innerHTML = `<div class="quiz-explain"><b>${i===q.correct?'Benar! 🎉':'Belum tepat.'}</b> ${q.exp}</div>
+      <button class="btn btn-primary btn-block" style="margin-top:14px;" id="quizNext">${this.qIndex < this.m.questions.length-1 ? 'Soal Berikutnya →' : 'Lihat Hasil 🏆'}</button>`;
+    document.getElementById('quizNext').addEventListener('click', ()=>{
+      if(this.qIndex < this.m.questions.length-1){ this.qIndex++; this.renderQuestion(); }
+      else this.renderResult();
+    });
+  },
+  renderResult(){
+    const total = this.m.questions.length;
+    const pct = Math.round((this.score/total)*100);
+    const pass = pct >= 60;
+    const badge = pct>=90? '🥇' : pct>=75? '🥈' : pct>=60? '🥉' : '📘';
+    const work = document.getElementById('workArea');
+    const card = document.createElement('div');
+    card.className = 'quiz-card quiz-result';
+    card.innerHTML = `
+      <div class="quiz-badge">${badge}</div>
+      <h2 style="margin:6px 0;">${pass? 'Selamat, Kamu Lulus!' : 'Terus Berlatih!'}</h2>
+      <div class="quiz-score">${this.score}/${total}</div>
+      <p style="color:var(--ink-soft);">Skor kamu: ${pct}%</p>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn btn-clear" id="btnRetry" style="flex:1;">🔁 Ulangi Kuis</button>
+        <button class="btn btn-primary" id="btnFinish" style="flex:1;">${pass? 'Selesai 🎉' : 'Kembali'}</button>
+      </div>
+    `;
+    work.innerHTML = ''; work.appendChild(card);
+    document.getElementById('btnRetry').addEventListener('click', ()=> this.start(this.m));
+    document.getElementById('btnFinish').addEventListener('click', ()=>{
+      if(pass){
+        this.m.completed = true;
+        showResultModal({
+          icon:'🏆', title:'Kamu Master Aljabar!',
+          body:'Kamu telah menyelesaikan seluruh perjalanan belajar di Algebra Tiles : Ubin Aljabar. Hebat sekali!',
+          actionText:'Kembali ke Peta Belajar', action:()=> goHome()
+        });
+      } else {
+        goHome();
+      }
+    });
+  }
+};
+
+</script>
+</body>
+</html>
