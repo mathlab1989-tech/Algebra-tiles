@@ -380,21 +380,22 @@ button{font-family:inherit;}
 @media (max-width:880px){
   .module-layout{flex-direction:column;}
   .panel-bank{
-    width:100%; order:3; border-right:none; border-top:1px solid var(--line);
+    width:100%; order:1; border-right:none; border-bottom:1px solid var(--line);
     flex-direction:row; flex-wrap:nowrap; align-items:center; justify-content:space-between;
     gap:8px; padding:8px 10px; max-height:none; overflow-x:auto;
+    position:sticky; top:0; z-index:5; box-shadow:0 4px 10px rgba(0,0,0,.08);
   }
   .panel-bank h3{display:none;}
   .bank-group{background:none;padding:0;display:flex;gap:8px;}
   .legend-mini{display:none;}
   .panel-status{
-    width:100%; order:2; border-left:none; border-top:1px solid var(--line); padding:8px 12px;
+    width:100%; order:3; border-left:none; border-top:1px solid var(--line); padding:8px 12px;
   }
   .mission-card{display:none;}
   .status-box{margin-bottom:8px;padding:8px 12px;}
   .status-actions{display:flex; gap:8px;}
   .status-actions .btn{flex:1;margin-bottom:0;font-size:.82rem;padding:11px 8px;}
-  .panel-work{order:1;padding:10px;}
+  .panel-work{order:2;padding:10px;}
   .work-toolbar{margin-bottom:8px;}
   :root{--u: clamp(20px, 6vw, 30px);}
 }
@@ -1255,7 +1256,8 @@ const GUIDE_PAGES = [
     <p>Ada <b>9 modul berurutan</b> — mulai dari mengenal ubin, bilangan bulat, suku sejenis, penjumlahan/pengurangan, perkalian, faktorisasi, persamaan linear, melengkapi kuadrat, hingga evaluasi akhir. Modul terbuka satu per satu setelah kamu menyelesaikan modul sebelumnya.</p>` },
   { title:'Siap Memulai? 🚀', body:`
     <p>Selesaikan setiap misi di panel kanan (atau lewat tombol 📋 Instruksi di layar kecil). Kumpulkan semua ✅ di peta belajar untuk menjadi <b>Master Aljabar</b>!</p>
-    <p style="text-align:center;font-size:1.3rem;margin-top:14px;">🎉 Selamat belajar sambil bermain! 🎉</p>` },
+    <p style="text-align:center;font-size:1.3rem;margin-top:14px;">🎉 Selamat belajar sambil bermain! 🎉</p>
+    <p style="text-align:center;font-size:.78rem;color:var(--ink-soft);margin-top:18px;border-top:1px solid var(--line);padding-top:12px;">Dikembangkan oleh <b>I Made Agus Suputrayasa</b></p>` },
 ];
 let guidePage = 0;
 function openGuide(){ guidePage = 0; renderGuide(); openModal('modalGuide'); }
