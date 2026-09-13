@@ -344,6 +344,18 @@ button{font-family:inherit;}
 .quiz-result{text-align:center;}
 .quiz-score{font-size:3rem;font-weight:800;color:var(--primary-dark);margin:10px 0;}
 .quiz-badge{font-size:3.4rem;}
+.quiz-type-badge{display:inline-block;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--primary);background:#EAF0FF;padding:3px 10px;border-radius:20px;margin-bottom:8px;}
+.quiz-opt.selected{border-color:var(--primary);background:#EAF0FF;}
+.quiz-opt.missed{border-color:var(--success);box-shadow:0 0 0 2px var(--success) inset;}
+.quiz-opt .opt-check{display:inline-block;width:18px;}
+.quiz-tf-row{display:flex;gap:12px;margin-bottom:6px;}
+.quiz-tf-row .quiz-opt{flex:1;text-align:center;font-size:1rem;}
+.quiz-match-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:var(--bg);border:2px solid var(--line);border-radius:12px;margin-bottom:10px;flex-wrap:wrap;}
+.quiz-match-left{font-weight:700;flex:1 1 55%;min-width:140px;}
+.quiz-match-select{padding:8px 10px;border-radius:10px;border:2px solid var(--line);font-weight:700;background:#fff;font-size:.85rem;flex:1 1 35%;min-width:120px;}
+.quiz-match-select:focus{outline:none;border-color:var(--primary);}
+.quiz-match-row.correct{border-color:var(--success);background:#E4F6EC;}
+.quiz-match-row.wrong{border-color:var(--danger);background:#FCEAEC;}
 
 /* ===== MODAL ===== */
 .modal-overlay{position:fixed; inset:0; background:rgba(15,20,30,.65); display:none; align-items:center; justify-content:center; z-index:100; padding:16px; backdrop-filter:blur(3px);}
@@ -892,27 +904,70 @@ const MODULES = [
   {
     id:'evaluasi', icon:'🏆', kind:'quiz',
     title:'Evaluasi Akhir',
-    shortDesc:'Uji pemahamanmu tentang semua konsep ubin aljabar.',
+    shortDesc:'Uji pemahamanmu tentang Bilangan Bulat, Aljabar, Pemfaktoran, dan Kuadrat Sempurna.',
     progressLevel:0, completed:false,
-    levels:[{ badge:'Evaluasi', title:'Kuis Akhir Algebra Tiles',
-      desc:'Jawablah semua soal berikut untuk menguji pemahamanmu tentang ubin aljabar dari awal sampai akhir.' }],
+    levels:[{ badge:'Evaluasi', title:'Kuis Akhir: Aljabar & Kuadrat',
+      desc:'20 soal campuran: Pilihan Ganda, Pilihan Ganda Kompleks, Benar/Salah, dan Menjodohkan. Jawablah semua soal untuk menguji pemahamanmu.' }],
     questions:[
-      { q:'Ubin persegi besar (x × x) mewakili suku apa?', opts:['x','x²','1','2x'], correct:1,
-        exp:'Ubin persegi besar mewakili x² karena luasnya adalah sisi x dikalikan sisi x.' },
-      { q:'Apa yang terjadi jika 1 ubin +1 (hijau) digabung dengan 1 ubin -1 (merah)?', opts:['Menjadi +2','Menjadi -2','Saling meniadakan (menjadi 0)','Menjadi x'], correct:2,
-        exp:'Ini disebut pasangan nol: +1 dan -1 saling meniadakan sehingga hasilnya 0.' },
-      { q:'Hasil dari 5 + (-3) menggunakan ubin adalah...', opts:['8','2','-2','-8'], correct:1,
-        exp:'5 ubin +1 bertemu 3 ubin -1, 3 pasang saling hilang, sisa 2 ubin +1.' },
-      { q:'Manakah yang termasuk "suku sejenis" dengan 3x?', opts:['3x²','5x','7','x²+x'], correct:1,
-        exp:'Suku sejenis harus memiliki bentuk & ukuran ubin yang sama; 5x sama-sama berbentuk ubin x.' },
-      { q:'Dalam Model Luas, hasil kali ubin x (baris) dengan ubin x (kolom) adalah...', opts:['x','x²','1','2x'], correct:1,
-        exp:'x × x = x², sesuai konsep luas persegi panjang.' },
-      { q:'Faktor dari x² + 5x + 6 adalah...', opts:['(x+2)(x+3)','(x+1)(x+6)','(x-2)(x-3)','(x+5)(x+1)'], correct:0,
-        exp:'2 + 3 = 5 dan 2 × 3 = 6, sehingga faktornya adalah (x+2)(x+3).' },
-      { q:'Pada persamaan 2x + 3 = 7, agar seimbang, jika sisi kiri dikurangi 3, maka sisi kanan harus...', opts:['Tetap 7','Dikurangi 3 juga','Dikali 2','Ditambah 3'], correct:1,
-        exp:'Timbangan harus tetap seimbang, jadi operasi yang sama harus dilakukan di kedua sisi.' },
-      { q:'Untuk melengkapi kuadrat sempurna dari x² + 6x, berapa ubin satuan yang perlu ditambahkan?', opts:['3','6','9','12'], correct:2,
-        exp:'6 dibagi 2 = 3, lalu 3 × 3 = 9 ubin satuan dibutuhkan agar menjadi (x+3)².' },
+      // ===== A. PILIHAN GANDA (1 jawaban benar) =====
+      { type:'mc', q:'Hasil dari −15 + 8 − (−10) adalah...', opts:['−17','−7','3','13'], correct:2,
+        exp:'−15 + 8 − (−10) = −15 + 8 + 10 = 3.' },
+      { type:'mc', q:'Seekor ikan berada di kedalaman 12 meter di bawah permukaan laut. Seekor burung berada 15 meter di atas permukaan laut tepat di atas ikan tersebut. Jarak antara kedua hewan tersebut adalah...', opts:['3 meter','27 meter','−3 meter','−27 meter'], correct:1,
+        exp:'Posisi burung (+15) dikurangi posisi ikan (−12): 15 − (−12) = 27 meter.' },
+      { type:'mc', q:'Bentuk sederhana dari operasi aljabar 5x − 3y + 2x + 7y adalah...', opts:['7x − 10y','3x + 4y','7x + 4y','3x − 10y'], correct:2,
+        exp:'Kelompokkan suku sejenis: (5x + 2x) + (−3y + 7y) = 7x + 4y.' },
+      { type:'mc', q:'Hasil perkalian dari bentuk aljabar (2x − 3)(x + 4) adalah...', opts:['2x² + 5x − 12','2x² + 11x − 12','2x² − 5x − 12','2x² + x − 12'], correct:0,
+        exp:'Metode FOIL: 2x·x + 2x·4 − 3·x − 3·4 = 2x² + 8x − 3x − 12 = 2x² + 5x − 12.' },
+      { type:'mc', q:'Pemfaktoran dari bentuk persamaan kuadrat x² + 7x + 10 adalah...', opts:['(x + 1)(x + 10)','(x − 2)(x − 5)','(x + 2)(x + 5)','(x − 2)(x + 5)'], correct:2,
+        exp:'Cari dua bilangan yang jika dijumlah = 7 dan dikali = 10, yaitu 2 dan 5, sehingga (x + 2)(x + 5).' },
+      { type:'mc', q:'Faktor dari bentuk 4x² − 9 (selisih dua kuadrat) adalah...', opts:['(2x − 3)(2x − 3)','(2x − 3)(2x + 3)','(4x − 3)(x + 3)','(2x − 9)(2x + 1)'], correct:1,
+        exp:'Selisih dua kuadrat a² − b² = (a−b)(a+b), dengan a = 2x dan b = 3.' },
+      { type:'mc', q:'Untuk melengkapkan bentuk x² + 6x agar menjadi bentuk kuadrat sempurna, bilangan yang harus ditambahkan adalah...', opts:['3','6','9','36'], correct:2,
+        exp:'Rumus (b/2)² = (6/2)² = 3² = 9.' },
+      { type:'mc', q:'Bentuk kuadrat sempurna dari ekspresi x² − 10x + 25 dapat dituliskan menjadi...', opts:['(x + 5)²','(x − 5)²','(x − 10)²','(x + 25)²'], correct:1,
+        exp:'x² − 10x + 25 = (x − 5)², karena (−5)² = 25 dan 2×(−5) = −10.' },
+
+      // ===== B. PILIHAN GANDA KOMPLEKS (bisa lebih dari 1 jawaban benar) =====
+      { type:'mc_multi', q:'Manakah dari operasi bilangan bulat berikut yang hasilnya bernilai positif?', opts:['−5 × (−3)','10 + (−12)','−20 : (−4)','−8 − (−10)'], correct:[0,2,3],
+        exp:'−5×(−3)=15 (positif), 10+(−12)=−2 (negatif), −20:(−4)=5 (positif), −8−(−10)=2 (positif). Jadi A, C, dan D bernilai positif.' },
+      { type:'mc_multi', q:'Perhatikan pengurangan aljabar berikut: (3x − 1) − (x + 4). Pernyataan manakah yang bernilai benar terkait hasil operasi tersebut?', opts:['Hasil pengurangannya adalah 2x − 5.','Koefisien variabel x pada hasil akhirnya adalah 2.','Konstanta pada hasil akhirnya adalah −5.','Hasil pengurangannya adalah 2x + 3.'], correct:[0,1,2],
+        exp:'(3x−1)−(x+4) = 3x−1−x−4 = 2x−5. Jadi hasilnya 2x−5 (A benar), koefisien x = 2 (B benar), konstanta = −5 (C benar). D salah karena hasilnya bukan 2x+3.' },
+      { type:'mc_multi', q:'Manakah di antara bentuk aljabar berikut yang memiliki salah satu faktor berupa (x − 4)?', opts:['x² − 16','x² − 5x + 4','x² − 8x + 16','x² + 4x − 12'], correct:[0,1,2],
+        exp:'x²−16=(x−4)(x+4); x²−5x+4=(x−1)(x−4); x²−8x+16=(x−4)². Ketiganya memiliki faktor (x−4). Sedangkan x²+4x−12=(x+6)(x−2), tidak memiliki faktor (x−4).' },
+      { type:'mc_multi', q:'Berikut ini adalah langkah-langkah dalam menyelesaikan x² + 4x − 5 = 0 dengan metode melengkapkan kuadrat sempurna. Manakah pernyataan langkah yang benar?', opts:['Pindahkan konstanta ke ruas kanan menjadi x² + 4x = 5.','Tambahkan kedua ruas (kiri dan kanan) dengan bilangan 4.','Bentuk persamaannya dapat diubah menjadi (x + 2)² = 9.','Nilai variabel x yang memenuhi adalah x = 1 atau x = −5.'], correct:[0,1,2,3],
+        exp:'Semua tahapan benar: x²+4x=5 → tambah (4/2)²=4 di kedua ruas → x²+4x+4=9 → (x+2)²=9 → x+2=±3 → x=1 atau x=−5.' },
+
+      // ===== C. BENAR / SALAH =====
+      { type:'tf', q:'Hasil kali dari dua buah bilangan bulat negatif akan selalu menghasilkan bilangan bulat negatif.', correct:false,
+        exp:'Salah. Hasil kali dua bilangan bulat negatif selalu menghasilkan bilangan bulat POSITIF, misalnya (−2)×(−3)=6.' },
+      { type:'tf', q:'Hasil pengurangan bentuk aljabar (4x + 2) dari (2x − 5) adalah −2x − 7.', correct:true,
+        exp:'Benar. "A dikurangi dari B" berarti B − A, jadi (2x−5) − (4x+2) = 2x−5−4x−2 = −2x−7.' },
+      { type:'tf', q:'Hasil pemfaktoran dari persamaan kuadrat x² − 6x + 9 adalah bentuk kuadrat sempurna (x − 3)².', correct:true,
+        exp:'Benar. (x−3)² = x² − 6x + 9, karena (−3)²=9 dan 2×(−3)=−6.' },
+      { type:'tf', q:'Nilai yang harus ditambahkan pada persamaan x² − 8x agar menjadi sebuah bentuk kuadrat sempurna adalah −16.', correct:false,
+        exp:'Salah. Nilai (b/2)² = (−8/2)² = (−4)² = 16 (selalu positif karena dikuadratkan), bukan −16.' },
+
+      // ===== D. MENJODOHKAN =====
+      { type:'match', q:'Soal 17 — Operasi Bilangan Bulat: jodohkan operasi di Kolom A dengan hasilnya di Kolom B.',
+        left:['−4 + (−5)', '−6 × 3', '20 : (−4)'],
+        right:['−18', '−9', '−5'],
+        correct:[1,0,2],
+        exp:'−4+(−5)=−9 (B), −6×3=−18 (A), 20:(−4)=−5 (C). Jadi pasangannya 1-B, 2-A, 3-C.' },
+      { type:'match', q:'Soal 18 — Operasi Aljabar: jodohkan bentuk aljabar di Kolom A dengan bentuk sederhana/hasilnya di Kolom B.',
+        left:['3a + 2a', '2(a − 4)', '(a + 2)(a − 2)'],
+        right:['2a − 8', 'a² − 4', '5a'],
+        correct:[2,0,1],
+        exp:'3a+2a=5a (C), 2(a−4)=2a−8 (A), (a+2)(a−2)=a²−4 (B). Jadi pasangannya 1-C, 2-A, 3-B.' },
+      { type:'match', q:'Soal 19 — Memfaktorkan Bentuk Kuadrat: jodohkan persamaan kuadrat di Kolom A dengan bentuk pemfaktorannya di Kolom B.',
+        left:['x² + 3x − 10', 'x² − 7x + 12', 'x² − 25'],
+        right:['(x − 3)(x − 4)', '(x − 5)(x + 5)', '(x + 5)(x − 2)'],
+        correct:[2,0,1],
+        exp:'x²+3x−10=(x+5)(x−2) (C), x²−7x+12=(x−3)(x−4) (A), x²−25=(x−5)(x+5) (B). Jadi pasangannya 1-C, 2-A, 3-B.' },
+      { type:'match', q:'Soal 20 — Melengkapkan Kuadrat Sempurna: jodohkan bentuk awal x² + bx di Kolom A dengan konstanta tambahan agar menjadi kuadrat sempurna di Kolom B.',
+        left:['x² + 12x', 'x² − 2x', 'x² + 14x'],
+        right:['49', '36', '1'],
+        correct:[1,2,0],
+        exp:'x²+12x: (12/2)²=36 (B). x²−2x: (−2/2)²=1 (C). x²+14x: (14/2)²=49 (A). Jadi pasangannya 1-B, 2-C, 3-A.' },
     ]
   },
 ];
@@ -967,8 +1022,6 @@ function renderHome(){
 
   let html = `
     <div class="hero">
-      <h1>🧩 Algebra Tiles: Ubin Aljabar</h1>
-      <p>Belajar konsep aljabar secara <b>konkret</b> lewat ubin, lalu bertahap menuju <b>gambar</b> dan <b>simbol abstrak</b> — dengan cara yang menyenangkan seperti bermain!</p>
       <div class="hero-actions">
         <button class="btn btn-primary" id="btnStart">${anyDone? 'Lanjutkan Belajar ▶️' : 'Mulai Belajar 🚀'}</button>
         <button class="btn btn-ghost" id="btnGuideHome">📖 Cara Bermain</button>
@@ -1074,7 +1127,7 @@ function showScreen(id){
 
 function goHome(){
   currentModuleId = null;
-  document.getElementById('brandText').innerHTML = 'Algebra Tiles <small>Ubin Aljabar</small>';
+  document.getElementById('brandText').innerHTML = '🧩 Algebra Tiles: Ubin Aljabar <small>Belajar konsep aljabar secara konkret lewat ubin, lalu bertahap menuju gambar dan simbol abstrak,dengan cara yang menyenangkan seperti bermain!</small>';
   document.getElementById('levelPill').style.display = 'none';
   document.getElementById('btnMissionMobile').style.display = 'none';
   renderHome();
@@ -2262,47 +2315,189 @@ const QuizEngine = {
     document.getElementById('statusPanel').innerHTML = '';
     this.renderQuestion();
   },
+  updateScorePill(){
+    document.getElementById('exprPill').textContent = `Skor: ${this.score} / ${this.m.questions.length}`;
+  },
+  typeLabel(type){
+    switch(type){
+      case 'mc_multi': return '☑️ Pilihan Ganda Kompleks';
+      case 'tf': return '✅ Benar / Salah';
+      case 'match': return '🔗 Menjodohkan';
+      default: return '🔘 Pilihan Ganda';
+    }
+  },
   renderQuestion(){
     const work = document.getElementById('workArea');
-    document.getElementById('exprPill').textContent = `Skor: ${this.score} / ${this.m.questions.length}`;
+    this.updateScorePill();
     const q = this.m.questions[this.qIndex];
     this.answered = false;
     const card = document.createElement('div');
     card.className = 'quiz-card';
     card.innerHTML = `
       <div class="quiz-progress">Soal ${this.qIndex+1} dari ${this.m.questions.length}</div>
+      <div class="quiz-type-badge">${this.typeLabel(q.type)}</div>
       <div class="quiz-q">${q.q}</div>
-      <div id="quizOpts"></div>
+      <div id="quizBody"></div>
       <div id="quizExplain"></div>
     `;
     work.innerHTML = ''; work.appendChild(card);
-    const optWrap = card.querySelector('#quizOpts');
+
+    const type = q.type || 'mc';
+    if(type==='mc') this.renderMC(q);
+    else if(type==='mc_multi') this.renderMultiMC(q);
+    else if(type==='tf') this.renderTF(q);
+    else if(type==='match') this.renderMatch(q);
+  },
+  goNextOrResult(){
+    if(this.qIndex < this.m.questions.length-1){ this.qIndex++; this.renderQuestion(); }
+    else this.renderResult();
+  },
+  showExplain(isCorrect, exp){
+    this.updateScorePill();
+    const exp2 = document.getElementById('quizExplain');
+    exp2.innerHTML = `<div class="quiz-explain"><b>${isCorrect?'Benar! 🎉':'Belum tepat.'}</b> ${exp}</div>
+      <button class="btn btn-primary btn-block" style="margin-top:14px;" id="quizNext">${this.qIndex < this.m.questions.length-1 ? 'Soal Berikutnya →' : 'Lihat Hasil 🏆'}</button>`;
+    document.getElementById('quizNext').addEventListener('click', ()=> this.goNextOrResult());
+  },
+  // ---------- Tipe: Pilihan Ganda (1 jawaban) ----------
+  renderMC(q){
+    const body = document.getElementById('quizBody');
     q.opts.forEach((opt, i)=>{
       const btn = document.createElement('button');
       btn.className = 'quiz-opt'; btn.textContent = opt;
-      btn.addEventListener('click', ()=> this.answer(i));
-      optWrap.appendChild(btn);
+      btn.addEventListener('click', ()=> this.answerMC(i));
+      body.appendChild(btn);
     });
   },
-  answer(i){
+  answerMC(i){
     if(this.answered) return;
     this.answered = true;
     const q = this.m.questions[this.qIndex];
-    const opts = document.querySelectorAll('.quiz-opt');
+    const opts = document.querySelectorAll('#quizBody .quiz-opt');
     opts.forEach((btn, idx)=>{
       btn.disabled = true;
       if(idx===q.correct) btn.classList.add('correct');
       else if(idx===i) btn.classList.add('wrong');
     });
-    if(i===q.correct) this.score++;
-    document.getElementById('exprPill').textContent = `Skor: ${this.score} / ${this.m.questions.length}`;
-    const exp = document.getElementById('quizExplain');
-    exp.innerHTML = `<div class="quiz-explain"><b>${i===q.correct?'Benar! 🎉':'Belum tepat.'}</b> ${q.exp}</div>
-      <button class="btn btn-primary btn-block" style="margin-top:14px;" id="quizNext">${this.qIndex < this.m.questions.length-1 ? 'Soal Berikutnya →' : 'Lihat Hasil 🏆'}</button>`;
-    document.getElementById('quizNext').addEventListener('click', ()=>{
-      if(this.qIndex < this.m.questions.length-1){ this.qIndex++; this.renderQuestion(); }
-      else this.renderResult();
+    const isCorrect = i===q.correct;
+    if(isCorrect) this.score++;
+    this.showExplain(isCorrect, q.exp);
+  },
+  // ---------- Tipe: Pilihan Ganda Kompleks (banyak jawaban) ----------
+  renderMultiMC(q){
+    const body = document.getElementById('quizBody');
+    this._multiSelected = new Set();
+    q.opts.forEach((opt, i)=>{
+      const btn = document.createElement('button');
+      btn.className = 'quiz-opt'; 
+      btn.innerHTML = `<span class="opt-check">☐</span> ${opt}`;
+      btn.addEventListener('click', ()=>{
+        if(this.answered) return;
+        if(this._multiSelected.has(i)){ this._multiSelected.delete(i); btn.classList.remove('selected'); btn.querySelector('.opt-check').textContent='☐'; }
+        else { this._multiSelected.add(i); btn.classList.add('selected'); btn.querySelector('.opt-check').textContent='☑️'; }
+      });
+      body.appendChild(btn);
     });
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'btn btn-primary btn-block'; submitBtn.style.marginTop='14px';
+    submitBtn.textContent = 'Periksa Jawaban ✅';
+    submitBtn.addEventListener('click', ()=> this.answerMultiMC());
+    body.appendChild(submitBtn);
+  },
+  answerMultiMC(){
+    if(this.answered) return;
+    const q = this.m.questions[this.qIndex];
+    if(this._multiSelected.size===0){ toast('Pilih minimal satu jawaban dulu ya.'); return; }
+    this.answered = true;
+    const correctSet = new Set(q.correct);
+    const opts = document.querySelectorAll('#quizBody .quiz-opt');
+    let allMatch = correctSet.size === this._multiSelected.size;
+    opts.forEach((btn, idx)=>{
+      btn.disabled = true;
+      btn.classList.remove('selected');
+      const isSel = this._multiSelected.has(idx);
+      const isCorrectOpt = correctSet.has(idx);
+      if(isSel && !isCorrectOpt){ btn.classList.add('wrong'); allMatch = false; }
+      else if(isCorrectOpt && !isSel){ btn.classList.add('missed'); allMatch = false; }
+      else if(isCorrectOpt && isSel){ btn.classList.add('correct'); }
+    });
+    const submitBtn = document.querySelector('#quizBody .btn-primary');
+    if(submitBtn) submitBtn.remove();
+    if(allMatch) this.score++;
+    this.showExplain(allMatch, q.exp);
+  },
+  // ---------- Tipe: Benar / Salah ----------
+  renderTF(q){
+    const body = document.getElementById('quizBody');
+    const row = document.createElement('div'); row.className='quiz-tf-row';
+    const btnTrue = document.createElement('button'); btnTrue.className='quiz-opt'; btnTrue.textContent='✅ Benar';
+    const btnFalse = document.createElement('button'); btnFalse.className='quiz-opt'; btnFalse.textContent='❌ Salah';
+    btnTrue.addEventListener('click', ()=> this.answerTF(true, btnTrue, btnFalse));
+    btnFalse.addEventListener('click', ()=> this.answerTF(false, btnTrue, btnFalse));
+    row.appendChild(btnTrue); row.appendChild(btnFalse);
+    body.appendChild(row);
+  },
+  answerTF(val, btnTrue, btnFalse){
+    if(this.answered) return;
+    this.answered = true;
+    const q = this.m.questions[this.qIndex];
+    btnTrue.disabled = true; btnFalse.disabled = true;
+    const correctBtn = q.correct ? btnTrue : btnFalse;
+    const chosenBtn = val ? btnTrue : btnFalse;
+    correctBtn.classList.add('correct');
+    if(chosenBtn !== correctBtn) chosenBtn.classList.add('wrong');
+    const isCorrect = val === q.correct;
+    if(isCorrect) this.score++;
+    this.showExplain(isCorrect, q.exp);
+  },
+  // ---------- Tipe: Menjodohkan ----------
+  renderMatch(q){
+    const body = document.getElementById('quizBody');
+    const rowsWrap = document.createElement('div');
+    q.left.forEach((ltext, i)=>{
+      const row = document.createElement('div'); row.className='quiz-match-row';
+      const label = document.createElement('div'); label.className='quiz-match-left';
+      label.innerHTML = `${i+1}. ${ltext}`;
+      const sel = document.createElement('select'); sel.className='quiz-match-select'; sel.id=`quizMatchSel${i}`;
+      const placeholder = document.createElement('option'); placeholder.value=''; placeholder.textContent='-- pilih --';
+      sel.appendChild(placeholder);
+      q.right.forEach((rtext, j)=>{
+        const opt = document.createElement('option'); opt.value=String(j);
+        opt.textContent = `${String.fromCharCode(65+j)}. ${rtext}`;
+        sel.appendChild(opt);
+      });
+      row.appendChild(label); row.appendChild(sel);
+      rowsWrap.appendChild(row);
+    });
+    body.appendChild(rowsWrap);
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'btn btn-primary btn-block'; submitBtn.style.marginTop='14px';
+    submitBtn.textContent = 'Periksa Jawaban ✅';
+    submitBtn.addEventListener('click', ()=> this.answerMatch(q));
+    body.appendChild(submitBtn);
+  },
+  answerMatch(q){
+    if(this.answered) return;
+    const rows = document.querySelectorAll('#quizBody .quiz-match-row');
+    const chosen = [];
+    for(let i=0;i<q.left.length;i++){
+      const sel = document.getElementById(`quizMatchSel${i}`);
+      if(!sel.value){ toast('Lengkapi semua pasangan dulu ya.'); return; }
+      chosen.push(Number(sel.value));
+    }
+    this.answered = true;
+    let allMatch = true;
+    rows.forEach((row, i)=>{
+      const sel = document.getElementById(`quizMatchSel${i}`);
+      sel.disabled = true;
+      const ok = chosen[i] === q.correct[i];
+      row.classList.add(ok? 'correct' : 'wrong');
+      if(!ok) allMatch = false;
+    });
+    const submitBtn = document.querySelector('#quizBody .btn-primary');
+    if(submitBtn) submitBtn.remove();
+    if(allMatch) this.score++;
+    this.showExplain(allMatch, q.exp);
   },
   renderResult(){
     const total = this.m.questions.length;
